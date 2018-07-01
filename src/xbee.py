@@ -9,7 +9,7 @@ xbee = ZigBeeDevice("/dev/ttyUSB0", 9600)
 
 try:
     xbee.open()
-    
+    xbee
     print("This Node ID: ", xbee.get_node_id())
     print("Is Remote: ", xbee.is_remote())
     print("Power Level: ", xbee.get_power_level())
@@ -38,7 +38,7 @@ try:
     while xnet.is_discovery_running():
         time.sleep(0.5)
 
-    devices = xnet.get_devices()
+    nodes = xnet.get_devices()
     
     for device in devices:
         print("Devices found: %s" % device)
@@ -47,7 +47,10 @@ try:
         packet_dict = packet.to_dict()
         api_data = packet_dict[DictKeys.FRAME_SPEC_DATA][DictKeys.API_DATA]
             
-
+    def initialize_nodes():
+	for node in nodes:
+		
+		 
 finally:
     if xbee is not None and xbee.is_open():
         xbee.close()
