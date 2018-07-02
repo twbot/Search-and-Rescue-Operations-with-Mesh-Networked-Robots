@@ -10,10 +10,12 @@ import struct
 
 xbee = ZigBeeDevice("/dev/ttyUSB0", 9600)
 power_level = 1
+api_mode = 2
 
 try:
     xbee.open()
     xbee.set_parameter('PL', utils.int_to_bytes(power_level, num_bytes=1))
+    xbee.set_parameter('AP', utils.int_to_bytes(api_mode, num_bytes=1))
     print("This Node ID: ", xbee.get_node_id())
     print("Is Remote: ", xbee.is_remote())
     print("Power Level: ", xbee.get_power_level())
@@ -52,6 +54,11 @@ try:
         rssi_val = struct.unpack('=B', rssi_raw)
         print("Node RSSI: %s" % rssi_val)
 
+    data = data.encode('utf-8')
+    rssi_raw = xbee.get_parameter('DB')
+    rssi_val = struct.unpack('=B', rssi_raw)
+    print("Node RSSI: %s" % rssi_val)
+    print("Node RSSI: %s" % rssi_raw)
     def packet_received_callback(packet):
         packet_dict = packet.to_dict()
         api_data = packet_dict[DictKeys.FRAME_SPEC_DATA][DictKeys.API_DATA]
@@ -59,7 +66,7 @@ try:
     
     # def node_update_position_estimates():
         
-    zigbee.add_packet_received_callback(packet_received_callback)
+    xbee.add_packet_received_callback(packet_received_callback)
 		
 		 
 finally:
