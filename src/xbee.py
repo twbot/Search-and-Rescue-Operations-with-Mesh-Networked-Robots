@@ -37,7 +37,6 @@ try:
 
     xnet.add_device_discovered_callback(discoverCallback)
     xnet.add_discovery_process_finished_callback(discoverCompleteCallback)
-
     xnet.start_discovery_process()
     while xnet.is_discovery_running():
         time.sleep(0.5)
@@ -58,8 +57,9 @@ try:
         api_data = packet_dict[DictKeys.FRAME_SPEC_DATA][DictKeys.API_DATA]
         print(api_data)
     
-    # print(packet_receive)
-    # zigbee.add_packet_received_callback(packet_received_callback)
+    # def node_update_position_estimates():
+        
+    zigbee.add_packet_received_callback(packet_received_callback)
 		
 		 
 finally:
