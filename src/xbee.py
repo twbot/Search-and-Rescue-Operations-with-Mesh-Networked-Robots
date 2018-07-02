@@ -4,29 +4,16 @@ from digi.xbee.devices import XBeeDevice, ZigBeeDevice
 from digi.xbee.models.status import NetworkDiscoveryStatus
 from digi.xbee.packets.base import DictKeys, OperatingMode
 import digi.xbee.packets.base as packets
+from digi.xbee.util import utils
 import time
 import struct
 
-
-# def main():
-#     zigbee = ZigBeeDevice('/dev/ttyUSB0', 9600)
-
-#     try:
-#         zigbee.open()
-#         data = 'Zigbee node %s sending data' % (zigbee.get_node_id())
-#         data = data.encode('utf-8')
-#         rssi_raw = zigbee.get_parameter("DB")
-#         rssi_val = struct.unpack('=B', rssi_raw)
-#         print(rssi_val)
-        #packet_receive = zigbee.send_data_broadcast(data)
-        #data_packet = packets.XBeePacket()
-        #packet = data_packet.create_packet(data, OperatingMode.API_MODE)
-        #packet_receive = zigbee.send_packet(packet)
-
 xbee = ZigBeeDevice("/dev/ttyUSB0", 9600)
+power_level = 1
 
 try:
     xbee.open()
+    xbee.set_parameter('PL', utils.int_to_bytes(power_level, num_bytes=1))
     print("This Node ID: ", xbee.get_node_id())
     print("Is Remote: ", xbee.is_remote())
     print("Power Level: ", xbee.get_power_level())
