@@ -57,12 +57,12 @@ try:
 
     nodes = xnet.get_devices()
     
-    data = 'Zigbee node %s sending data' % (zigbee.get_node_id())
+    data = 'Zigbee node %s sending data' % (xbee.get_node_id())
 
     for node in nodes:
         print("Nodes found: %s" % node)
         data = data.encode('utf-8')
-        rssi_raw = zigbee.get_parameter('DB')
+        rssi_raw = xbee.get_parameter('DB')
         rssi_val = struct.unpack('=B', rssi_raw)
         print("Node RSSI: %s" % rssi_val)
 
