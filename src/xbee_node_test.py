@@ -9,7 +9,7 @@ import math
 import xbee
 
 from sensor_msgs.msg import Image
-from mavros_msgs.msg import OverrideRCIn
+from mavros_msgs.msg import OverrideRCIn, BatteryStatus
 from node_msg import NodeStatus
 
 from digi.xbee.devices import ZigBeeDevice
@@ -22,6 +22,7 @@ xbee = ZigBeeDevice("/dev/ttyUSB0", 9600)
 power_level = 1
 api_mode = 2
 hierarchy = 0
+node_id = ''
 
 rc_pub = rospy.Publisher('/mavros/rc/override', OverrideRCIn, queue_size=10)
 node_pub = rospy.Publisher('/node_status', NodeStatus, queue_size=10)
@@ -31,7 +32,8 @@ def instantiate_zigbee_network():
         xbee.open()
         xbee.set_parameter('PL', utils.int_to_bytes(power_level, num_bytes=1))
         xbee.set_parameter('AP', utils.int_to_bytes(api_mode, num_bytes=1))
-        print("This Node ID: ", xbee.get_node_id())
+        node_id = xbee.get_node_id()
+        print("This Node ID: ", node_id)
         print("Is Remote: ", xbee.is_remote())
         print("Power Level: ", xbee.get_power_level())
         hierarchy = xbee.get_parameter('CE')
@@ -72,11 +74,19 @@ def instantiate_zigbee_network():
         print("Node RSSI: %s" % rssi_val)
         print("Node RSSI: %s" % rssi_raw)
 
+def check_mission_status():
+    mission_status = False
+
+def node_callback(battery_data):
+    batter_status = battery_data.remaining
+    #Mission status will be None for now, until 
+    mission_status = None
 
 def node_data_publisher():
     rospy.init_node('node_status', anonymous=True)
     recieved = xbee.add_packet_received_callback(xbee.packet_received_callback)
-    #DETERMINE DATA TO SEND
+    rospy.Subscriber('/mavros/battery', BatteryStatus, node_callback)
+
     if(recieved){
         node_pub.publish(data)
     }
@@ -96,6 +106,9 @@ def main():
 
     instantiate_zigbee_network()
     node_data_publisher()
+
+    while not rospy.is_shutdown():
+        check_mission_status()
 
 
 if __name__ == '__main__':

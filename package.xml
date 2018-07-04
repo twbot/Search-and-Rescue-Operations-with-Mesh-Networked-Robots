@@ -41,6 +41,8 @@
   <!--   <test_depend>gtest</test_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
   <buildtool_depend>mavros</buildtool_depend>
+  <build_depend>message_generation</build_depend>
+  <exec_depend>message_runtime</exec_depend>
   <run_depend>mavros</run_depend>
 
 
