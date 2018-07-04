@@ -45,8 +45,10 @@ def autopilot_abstraction(speed='SLOW',direction='STRAIGHT', exec_time=1):
 if __name__ == '__main__':
  rospy.init_node('tryrover_node', anonymous=True)
  rospy.wait_for_service('/mavros/set_mode')
+ print('Waiting for set_mode response...\n')
  change_mode = rospy.ServiceProxy('/mavros/set_mode', SetMode)
  answer = change_mode(custom_mode='manual')
+ print('Mode changed to manual?')
  print (answer)
  if 'True' in str(answer):
   try:
