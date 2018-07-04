@@ -2,7 +2,7 @@
 
 import rospy
 
-import cv2
+# import cv2
 import numpy as np
 import math
 
@@ -38,11 +38,10 @@ def instantiate_zigbee_network():
         print("Power Level: ", xbee.get_power_level())
         hierarchy = xbee.get_parameter('CE')
         print(hierarchy)
-        if(!hierarchy){
+        if not hierarchy:
             router_val = xbee.get_node_id()
             router_val = router_val.split('_')[1]
             hierarchy = router_val
-        }
 
         print("Entering discovery mode...\n")
 
@@ -74,6 +73,9 @@ def instantiate_zigbee_network():
         print("Node RSSI: %s" % rssi_val)
         print("Node RSSI: %s" % rssi_raw)
 
+    except ZigBeeException:
+        print('Error %s' % ZigBeeException)
+
 def check_mission_status():
     mission_status = False
 
@@ -87,10 +89,8 @@ def node_data_publisher():
     recieved = xbee.add_packet_received_callback(xbee.packet_received_callback)
     rospy.Subscriber('/mavros/battery', BatteryStatus, node_callback)
 
-    if(recieved){
+    if recieved:
         node_pub.publish(data)
-    }
-    # rospy.Subscriber("/")
     rospy.spin()
 
 def image_subscriber():

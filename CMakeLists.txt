@@ -14,10 +14,10 @@ Node.msg
 )
 
 ## Generate added messages and services
-generate_messages(DEPENDENCIES std_msgs)
+
 
 ## Declare a catkin package
-catkin_package(CATKIN_DEPENDS message_runtime)
+#catkin_package(CATKIN_DEPENDS)
 
 #include_directories(include ${catkin_INCLUDE_DIRS})
 
@@ -26,3 +26,4 @@ catkin_package(CATKIN_DEPENDS message_runtime)
 ## add_dependencies(ros_rover_move ros_rover_move_generate_messages_cpp)
 
 catkin_python_setup()
+generate_messages(DEPENDENCIES std_msgs)
