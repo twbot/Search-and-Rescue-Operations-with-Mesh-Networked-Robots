@@ -21,7 +21,6 @@ api_mode = 2
 hierarchy = 0
 node_id = ''
 
-rc_pub = rospy.Publisher('/mavros/rc/override', OverrideRCIn, queue_size=10)
 node_pub = rospy.Publisher('/node_status', NodeStatus, queue_size=10)
 
 def instantiate_zigbee_network():
@@ -89,26 +88,24 @@ def node_data_publisher():
     if recieved:
         node_pub.publish(data)
 
-def image_subscriber():
-    rospy.init_node('img_node', anonymous=True)
-    rospy.Subscriber('/rover/img_data', Image, img_callback)
-    rospy.spin()
-
 def on_end():
     if xbee is not None and xbee.is_open():
         xbee.close()
 
 def main():
-
+    rospy.init_node('node_status')
+    recieved = xbee.add_packet_received_callback(xbee.packet_received_callback)
+    
+    
     instantiate_zigbee_network()
     node_data_publisher()
-    rate = rospy.Rate(10)
+    # rate = rospy.Rate(10)
 
-    while not rospy.is_shutdown():
+    while not rospy.is_shutdown() or mission_status:
         check_mission_status()
         rospy.spin()
 
-    rospy.on_shutdown()
+    rospy.on_shutdown(on_end)
     
 if __name__ == '__main__':
     main()
