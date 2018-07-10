@@ -20,8 +20,10 @@ power_level = 1
 api_mode = 2
 hierarchy = 0
 node_id = ''
+received_packet = None
+battery = 1
 
-node_pub = rospy.Publisher('/node_status', NodeStatus, queue_size=10)
+pub = rospy.Publisher('/mavros/rc/override', OverrideRCIn, queue_size=10)
 
 def instantiate_zigbee_network():
     try:
@@ -72,21 +74,37 @@ def instantiate_zigbee_network():
     except ZigBeeException:
         print('Error %s' % ZigBeeException)
 
+def update_rssi_table(packet):
+    print(packet)
+
+def coordinate_velocities():
+    msg = OverrideRCIn()
+    msg.channels[0] = yaw
+    msg.channels[1] = 0
+    msg.channels[2] = throttle
+    msg.channels[3] = 0
+    msg.channels[4] = 0
+    msg.channels[5] = 0
+    msg.channels[6] = 0
+    msg.channels[7] = 0
+    pub.publish(msg)   
+
+def battery_callback():
+    #Recieve percentage parameter from ros publisher
+    battery_status = battery_data.percentage
+    #If battery status below 10%, change battery bool
+    if batter_status < .10:
+        battery = 0
+
 def check_mission_status():
     mission_status = False
 
+
 def node_callback(battery_data):
     batter_status = battery_data.remaining
-    #Mission status will be None for now, until 
-    mission_status = None
-
-def node_data_publisher():
-    rospy.init_node('node_status', anonymous=True)
-    recieved = xbee.add_packet_received_callback(xbee.packet_received_callback)
-    rospy.Subscriber('/mavros/battery', BatteryStatus, node_callback)
-
-    if recieved:
-        node_pub.publish(data)
+    #If battery falls below 10% capacity, notify recipients
+    #Mission status: time remaining to travel
+    mission_status = rospy.time()
 
 def on_end():
     if xbee is not None and xbee.is_open():
@@ -94,15 +112,16 @@ def on_end():
 
 def main():
     rospy.init_node('node_status')
-    recieved = xbee.add_packet_received_callback(xbee.packet_received_callback)
-    
-    
+
     instantiate_zigbee_network()
-    node_data_publisher()
     # rate = rospy.Rate(10)
 
     while not rospy.is_shutdown() or mission_status:
         check_mission_status()
+        received_packet = xbee.add_packet_received_callback(xbee.packet_received_callback)
+        update_rssi_table(received_packet)
+        # rospy.Subscriber("/mavros/battery", BatteryStatus, update_rssi_table)
+        # coordinate_velocities()
         rospy.spin()
 
     rospy.on_shutdown(on_end)
