@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(ros_rover_move)
+project(erle_rover_nav)
 
 ## Find catkin and any catkin packages
 find_package(catkin REQUIRED COMPONENTS 
@@ -14,7 +14,6 @@ Node.msg
 )
 
 ## Generate added messages and services
-
 
 ## Declare a catkin package
 #catkin_package(CATKIN_DEPENDS)
