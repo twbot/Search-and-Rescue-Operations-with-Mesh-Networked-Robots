@@ -4,14 +4,16 @@ import rospy
 #import cv2
 #import numpy as np
 import math
-import xbee
+import xbee as xlib
+import time
+import struct 
 
 from mavros_msgs.msg import OverrideRCIn, BatteryStatus
 #from msg import NodeStatus
 
 from digi.xbee.devices import ZigBeeDevice
 from digi.xbee.packets.base import DictKeys
-from digi.xbee.exception import XBeeException
+from digi.xbee.exception import XBeeException, ConnectionException
 from digi.xbee.util import utils
 
 sysyem_nodes = {}
@@ -28,10 +30,13 @@ pub = rospy.Publisher('/mavros/rc/override', OverrideRCIn, queue_size=10)
 
 def instantiate_zigbee_network():
     try:
+        print("Opening xbee port")
         xbee.open()
-        print("Port opened")
+        print("Setting Power Level")
         xbee.set_parameter('PL', utils.int_to_bytes(power_level, num_bytes=1))
+        print("Setting API Mode")
         xbee.set_parameter('AP', utils.int_to_bytes(api_mode, num_bytes=1))
+        print("Getting self id")
         node_id = xbee.get_node_id()
         print("This Node ID: ", node_id)
         print("Is Remote: ", xbee.is_remote())
@@ -49,8 +54,8 @@ def instantiate_zigbee_network():
         xnet.set_discovery_timeout(15)
         xnet.clear()
 
-        xnet.add_device_discovered_callback(xbee.discoverCallback)
-        xnet.add_discovery_process_finished_callback(xbee.discoverCompleteCallback)
+        xnet.add_device_discovered_callback(xlib.discoverCallback)
+        xnet.add_discovery_process_finished_callback(xlib.discoverCompleteCallback)
         xnet.start_discovery_process()
 
         while xnet.is_discovery_running():
@@ -62,23 +67,26 @@ def instantiate_zigbee_network():
 
         for node in nodes:
             print("Nodes found: %s" % node)
-            data = data.encode('utf-8')
+            #data = str(data)
+            #data = data.encode('utf-8')
             rssi_raw = xbee.get_parameter('DB')
             rssi_val = struct.unpack('=B', rssi_raw)
             print("Node RSSI: %s" % rssi_val)
 
-        data = data.encode('utf-8')
-        rssi_raw = xbee.get_parameter('DB')
-        rssi_val = struct.unpack('=B', rssi_raw)
-        print("Node RSSI: %s" % rssi_val)
-        print("Node RSSI: %s" % rssi_raw)
+        #data = data.encode('utf-8')
+        #rssi_raw = xbee.get_parameter('DB')
+        #rssi_val = struct.unpack('=B', rssi_raw)
+        #print("Node RSSI: %s" % rssi_val)
+        #print("Node RSSI: %s" % rssi_raw)
         return 1
 
     except XBeeException:
         print('Error XBeeException')
+        xbee.close()
         return 0
     except ConnectionException:
         print('Error Connenction')
+        xbee.close()
         return 0
 
 def update_rssi_table(packet):
@@ -119,24 +127,24 @@ def on_end():
         print('Xbee Closed')
 
 def main():
-    rospy.init_node('node_status')
+    #rospy.init_node('node_status')
 
     instantiated = instantiate_zigbee_network()
     # rate = rospy.Rate(10)
 
-    if instantiated:
-        while (not rospy.is_shutdown()) or mission_status:
-            check_mission_status()
-            received_packet = xbee.add_packet_received_callback(xbee.packet_received_callback)
-            update_rssi_table(received_packet)
+    #if instantiated:
+    #    while (not rospy.is_shutdown()) or mission_status:
+    #        check_mission_status()
+    #        received_packet = xbee.add_packet_received_callback(xbee.packet_received_callback)
+    #        update_rssi_table(received_packet)
             # rospy.Subscriber("/mavros/battery", BatteryStatus, update_rssi_table)
             # coordinate_velocities()
-            rospy.spin()
+    #        rospy.spin()
     
-    else:
-        rospy.on_shutdown(on_end)
+    #else:
+    #    rospy.on_shutdown(on_end)
 
-    rospy.on_shutdown(on_end)
+    #rospy.on_shutdown(on_end)
     
 if __name__ == '__main__':
     main()
