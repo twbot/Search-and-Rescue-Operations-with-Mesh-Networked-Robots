@@ -13,7 +13,7 @@ from mavros_msgs.msg import OverrideRCIn, BatteryStatus
 
 from digi.xbee.devices import ZigBeeDevice
 from digi.xbee.packets.base import DictKeys
-from digi.xbee.exception import XBeeException, ConnectionException
+from digi.xbee.exception import XBeeException, ConnectionException, ATCommandException, InvalidOperatingModeException
 from digi.xbee.util import utils
 
 sysyem_nodes = {}
@@ -25,6 +25,9 @@ hierarchy = 0
 node_id = ''
 received_packet = None
 battery = 1
+mission_time = 0
+exec_time = 15
+nodes = []
 
 pub = rospy.Publisher('/mavros/rc/override', OverrideRCIn, queue_size=10)
 
@@ -37,16 +40,11 @@ def instantiate_zigbee_network():
         print("Setting API Mode")
         xbee.set_parameter('AP', utils.int_to_bytes(api_mode, num_bytes=1))
         print("Getting self id")
+        global node_id
         node_id = xbee.get_node_id()
         print("This Node ID: ", node_id)
         print("Is Remote: ", xbee.is_remote())
         print("Power Level: ", xbee.get_power_level())
-        #hierarchy = xbee.get_parameter('CE')
-        #print(hierarchy)
-        #if not hierarchy:
-        #    router_val = xbee.get_node_id()
-        #    router_val = router_val.split('_')[1]
-        #    hierarchy = router_val
 
         print("Entering discovery mode...\n")
 
@@ -60,7 +58,7 @@ def instantiate_zigbee_network():
 
         while xnet.is_discovery_running():
             time.sleep(0.5)
-
+        global nodes
         nodes = xnet.get_devices()
 
         data = 'Zigbee node %s sending data' % (xbee.get_node_id())
@@ -80,14 +78,32 @@ def instantiate_zigbee_network():
         #print("Node RSSI: %s" % rssi_raw)
         return 1
 
-    except XBeeException:
-        print('Error XBeeException')
-        xbee.close()
-        return 0
     except ConnectionException:
-        print('Error Connenction')
+        print('Error Connection')
         xbee.close()
         return 0
+    except ATCommandException:
+        print('Response of the command is not valid : ATCommandException')
+        xbee.close()
+        return 0
+    except InvalidOperatingModeException:
+        print('Not in API Mode')
+        xbee.close()
+        return 0
+
+def determine_architecture():
+    for node in nodes:
+        if(node_id == 'COORDINATOR'):
+            xbee.send_data(node,"DATREQ")
+            print('Data sent')
+            package = xbee.read_data(5)
+            print(package)
+        else:
+            print('Nothing to send')
+            package = xbee.read_data(5)
+            print(package)
+    print('Architecture Determined')
+    return 1
 
 def update_rssi_table(packet):
     print(packet)
@@ -112,14 +128,16 @@ def battery_callback():
         battery = 0
 
 def check_mission_status():
-    mission_status = False
+    current_time = time.time()
+    if((current_time - mission_time) > exec_time):
+        return 1
+    return 0
 
 
 def node_callback(battery_data):
     batter_status = battery_data.remaining
     #If battery falls below 10% capacity, notify recipients
     #Mission status: time remaining to travel
-    mission_status = rospy.time()
 
 def on_end():
     if xbee is not None and xbee.is_open():
@@ -127,24 +145,27 @@ def on_end():
         print('Xbee Closed')
 
 def main():
-    #rospy.init_node('node_status')
-
-    instantiated = instantiate_zigbee_network()
-    # rate = rospy.Rate(10)
-
-    #if instantiated:
-    #    while (not rospy.is_shutdown()) or mission_status:
-    #        check_mission_status()
-    #        received_packet = xbee.add_packet_received_callback(xbee.packet_received_callback)
+    rospy.init_node('node_status')
+    mission_time = time.time()
+    mission_status = 0
+    net_instantiated = instantiate_zigbee_network()
+    arch_instantiated = determine_architecture()
+    #rate = rospy.Rate(10)
+    print(net_instantiated)
+    #if net_instantiated and arch_instantiated:
+       # while (not rospy.is_shutdown()) or mission_status:
+       #     mission_status = check_mission_status()
+       #     received_packet = xbee.add_packet_received_callback(xbee.packet_received_callback)
+       #     print(received_packet)
     #        update_rssi_table(received_packet)
             # rospy.Subscriber("/mavros/battery", BatteryStatus, update_rssi_table)
             # coordinate_velocities()
-    #        rospy.spin()
+       #     rospy.spin()
     
     #else:
     #    rospy.on_shutdown(on_end)
 
-    #rospy.on_shutdown(on_end)
+    rospy.on_shutdown(on_end)
     
 if __name__ == '__main__':
     main()
