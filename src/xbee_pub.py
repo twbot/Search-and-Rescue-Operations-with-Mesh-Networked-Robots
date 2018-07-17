@@ -151,7 +151,8 @@ def main():
     net_instantiated = instantiate_zigbee_network()
     arch_instantiated = determine_architecture()
     #rate = rospy.Rate(10)
-    print(net_instantiated)
+    print('Net Instantiated: ', net_instantiated)
+    print('Arch Instantiated: ', arch_instantiated)
     #if net_instantiated and arch_instantiated:
        # while (not rospy.is_shutdown()) or mission_status:
        #     mission_status = check_mission_status()
