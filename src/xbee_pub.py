@@ -100,6 +100,9 @@ def determine_architecture():
             while not_read == None:
                 package = xbee.read_data()
                 if package is not None:
+                    val = struct.unpack('=B', package.data)
+                    rssi = xbee.get_parameter("DB")
+                    rssi = struct.unpack('=B', rssi)
                     print(package.data)
                 not_read = package
     else:
@@ -107,6 +110,10 @@ def determine_architecture():
         while not_read == None:
             package = xbee.read_data()
             if package is not None:
+                val = struct.unpack('=B', package.data)
+                sent_node_id = struct.unpack('=B', package.remote_device)
+                if val == 'DATAREQ': 
+                    xbee.send_data(sent_node_id, node_id) 
             	print(package.data)
             not_read = package
     print('Architecture Determined')
