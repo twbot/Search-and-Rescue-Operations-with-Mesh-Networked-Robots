@@ -92,16 +92,18 @@ def instantiate_zigbee_network():
         return 0
 
 def determine_architecture():
-    for node in nodes:
-        if(node_id == 'COORDINATOR'):
+    if(node_id == 'COORDINATOR'):
+        for node in nodes:
             xbee.send_data(node,"DATREQ")
             print('Data sent')
             package = xbee.read_data(5)
             print(package)
-        else:
-            print('Nothing to send')
+    else:
+        not_read = None
+        while not_read == None:
             package = xbee.read_data(5)
             print(package)
+            not_read = package
     print('Architecture Determined')
     return 1
 
