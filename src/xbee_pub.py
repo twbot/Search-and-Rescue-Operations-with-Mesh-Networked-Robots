@@ -96,13 +96,16 @@ def determine_architecture():
         for node in nodes:
             xbee.send_data(node,"DATREQ")
             print('Data sent')
-            package = xbee.read_data(5)
-            print(package)
+            not_read = None
+            while not_read == None:
+                package = xbee.read_data()
+                print(package.data)
+                not_read = package
     else:
         not_read = None
         while not_read == None:
-            package = xbee.read_data(5)
-            print(package)
+            package = xbee.read_data()
+            print(package.data)
             not_read = package
     print('Architecture Determined')
     return 1
