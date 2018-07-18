@@ -16,7 +16,7 @@ from digi.xbee.packets.base import DictKeys
 from digi.xbee.exception import XBeeException, ConnectionException, ATCommandException, InvalidOperatingModeException
 from digi.xbee.util import utils
 
-sysyem_nodes = {}
+system_nodes = {}
 
 xbee = ZigBeeDevice("/dev/ttyUSB0", 9600)
 power_level = 1
@@ -104,7 +104,7 @@ def determine_architecture():
             rssi = xbee.get_parameter("DB")
             rssi = struct.unpack('=B', rssi)
             print(val)
-            print(rssi)
+            print(rssi[0])
     else:
         data = None
         while data == None:
@@ -112,9 +112,6 @@ def determine_architecture():
             data = packet
         val = data.data.decode()
         sending_node = data.remote_device
-        #packet_dict = data.to_dict()
-        #packet = packet_dict[DictKeys.FRAME_SPEC_DATA][DictKeys.API_DATA]
-        #sent_node_id = struct.unpack('=B', package.remote_device)
         if val == 'DATREQ': 
             xbee.send_data(sending_node, node_id) 
         print("Value: ", val)
@@ -123,7 +120,11 @@ def determine_architecture():
     return 1
 
 def update_rssi_table(packet):
-    print(packet)
+    val = packet.data.decode()
+    sending_node = data.remote_device
+    rssi = xbee.get_parameter("DB")
+    rssi = struct.unpack("=B", rssi)
+    system_nodes[sending_node] = rssi
 
 def coordinate_velocities():
     msg = OverrideRCIn()
