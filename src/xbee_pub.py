@@ -98,24 +98,25 @@ def determine_architecture():
             print('Data sent')
             not_read = None
             while not_read == None:
-                package = xbee.read_data()
-                if package is not None:
-                    val = struct.unpack('=B', package.data)
+                packet = xbee.read_data()
+                if packet is not None:
+                    packet = packet.to_dict()
+                    data = packet[DictKeys.FRAME_SPEC_DATA][DictKeys.API_DATA]
                     rssi = xbee.get_parameter("DB")
                     rssi = struct.unpack('=B', rssi)
-                    print(package.data)
-                not_read = package
+                not_read = packet
     else:
         not_read = None
         while not_read == None:
-            package = xbee.read_data()
-            if package is not None:
-                val = struct.unpack('=B', package.data)
-                sent_node_id = struct.unpack('=B', package.remote_device)
-                if val == 'DATAREQ': 
-                    xbee.send_data(sent_node_id, node_id) 
-            	print(package.data)
-            not_read = package
+            packet = xbee.read_data()
+            if packet is not None:
+                packet = packet.to_dict()
+                data = packet[DictKeys.FRAME_SPEC_DATA][DictKeys.API_DATA]
+                #sent_node_id = struct.unpack('=B', package.remote_device)
+                #if val == 'DATAREQ': 
+                #    xbee.send_data(sent_node_id, node_id) 
+                print(data)
+            not_read = packet
     print('Architecture Determined')
     return 1
 
