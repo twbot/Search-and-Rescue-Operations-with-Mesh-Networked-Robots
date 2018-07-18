@@ -111,11 +111,11 @@ def determine_architecture():
             packet = xbee.read_data()
             data = packet
         val = data.data.decode()
-        sending_node = data.remote_device.get_64bit_addr()
+        sending_node = data.remote_device
         #packet_dict = data.to_dict()
         #packet = packet_dict[DictKeys.FRAME_SPEC_DATA][DictKeys.API_DATA]
         #sent_node_id = struct.unpack('=B', package.remote_device)
-        if val == 'DATAREQ': 
+        if val == 'DATREQ': 
             xbee.send_data(sending_node, node_id) 
         print("Value: ", val)
         print("Sending node: ", sending_node)
