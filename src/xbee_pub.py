@@ -100,22 +100,25 @@ def determine_architecture():
             while data  == None:
                 packet = xbee.read_data()
                 data = packet
-            packet_dict = data.to_dict()
-            packet = packet_dict[DictKeys.FRAME_SPEC_DATA][DictKeys.API_DATA]
+            val = data.data.decode()
             rssi = xbee.get_parameter("DB")
             rssi = struct.unpack('=B', rssi)
-            print(packet)
+            print(val)
+            print(rssi)
     else:
         data = None
         while data == None:
             packet = xbee.read_data()
             data = packet
-        packet_dict = data.to_dict()
-        packet = packet_dict[DictKeys.FRAME_SPEC_DATA][DictKeys.API_DATA]
+        val = data.data.decode()
+        sending_node = data.remote_device.get_64bit_addr()
+        #packet_dict = data.to_dict()
+        #packet = packet_dict[DictKeys.FRAME_SPEC_DATA][DictKeys.API_DATA]
         #sent_node_id = struct.unpack('=B', package.remote_device)
-        #if val == 'DATAREQ': 
-        #    xbee.send_data(sent_node_id, node_id) 
-        print(packet)
+        if val == 'DATAREQ': 
+            xbee.send_data(sending_node, node_id) 
+        print("Value: ", val)
+        print("Sending node: ", sending_node)
     print('Architecture Determined')
     return 1
 
