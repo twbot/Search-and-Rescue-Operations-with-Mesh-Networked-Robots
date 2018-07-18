@@ -100,11 +100,7 @@ def determine_architecture():
             while data  == None:
                 packet = xbee.read_data()
                 data = packet
-            val = data.data.decode()
-            rssi = xbee.get_parameter("DB")
-            rssi = struct.unpack('=B', rssi)
-            print(val)
-            print(rssi[0])
+            update_rssi_table(packet)
     else:
         data = None
         while data == None:
@@ -124,7 +120,7 @@ def update_rssi_table(packet):
     sending_node = data.remote_device
     rssi = xbee.get_parameter("DB")
     rssi = struct.unpack("=B", rssi)
-    system_nodes[sending_node] = rssi
+    system_nodes[sending_node] = rssi[0]
 
 def coordinate_velocities():
     msg = OverrideRCIn()
@@ -169,20 +165,20 @@ def main():
     net_instantiated = instantiate_zigbee_network()
     arch_instantiated = determine_architecture()
     #rate = rospy.Rate(10)
-    print('Net Instantiated: ', net_instantiated)
-    print('Arch Instantiated: ', arch_instantiated)
+    print('Net Instantiated: ', net_instantiated?'yes':'no')
+    print('Arch Instantiated: ', arch_instantiated?'yes':'no')
+    for x in system_nodes:
+        print(x, " : ", system_nodes[x])
+        
     #if net_instantiated and arch_instantiated:
-       # while (not rospy.is_shutdown()) or mission_status:
-       #     mission_status = check_mission_status()
-       #     received_packet = xbee.add_packet_received_callback(xbee.packet_received_callback)
-       #     print(received_packet)
-    #        update_rssi_table(received_packet)
-            # rospy.Subscriber("/mavros/battery", BatteryStatus, update_rssi_table)
-            # coordinate_velocities()
-       #     rospy.spin()
+        #while (not rospy.is_shutdown()) or mission_status:
+            #mission_status = check_mission_status()
+            #rospy.Subscriber("/mavros/battery", BatteryStatus, update_status)
+            #coordinate_velocities()
+            #rospy.spin()
     
     #else:
-    #    rospy.on_shutdown(on_end)
+        #rospy.on_shutdown(on_end)
 
     rospy.on_shutdown(on_end)
     
