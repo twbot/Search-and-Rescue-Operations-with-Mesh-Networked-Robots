@@ -109,8 +109,7 @@ def determine_architecture():
     return 1
 
 def define_node(node):
-    node = re.findall(r'\d+', node)
-    print(node)
+    node = re.findall(r'[\w\d]+', str(node))
     return node
 
 def init_rssi_table():
@@ -125,6 +124,8 @@ def update_rssi_table(packet):
     rssi = xbee.get_parameter("DB")
     rssi = struct.unpack("=B", rssi)
     system_nodes[str(sending_node)] = rssi[0]
+    print(sending_node)
+    print(rssi)
 
 def coordinate_velocities():
     msg = OverrideRCIn()
