@@ -63,13 +63,13 @@ def instantiate_zigbee_network():
 
         data = 'Zigbee node %s sending data' % (xbee.get_node_id())
 
-        for node in nodes:
-            print("Nodes found: %s" % node)
+        #for node in nodes:
+        #    print("Nodes found: %s" % node)
             #data = str(data)
             #data = data.encode('utf-8')
-            rssi_raw = xbee.get_parameter('DB')
-            rssi_val = struct.unpack('=B', rssi_raw)
-            print("Node RSSI: %s" % rssi_val)
+        #    rssi_raw = xbee.get_parameter('DB')
+        #    rssi_val = struct.unpack('=B', rssi_raw)
+        #    print("Node RSSI: %s" % rssi_val)
 
         #data = data.encode('utf-8')
         #rssi_raw = xbee.get_parameter('DB')
@@ -115,12 +115,14 @@ def determine_architecture():
     print('Architecture Determined')
     return 1
 
+def init_rssi_table(packet):
+    
 def update_rssi_table(packet):
     val = packet.data.decode()
-    sending_node = data.remote_device
+    sending_node = packet.remote_device
     rssi = xbee.get_parameter("DB")
     rssi = struct.unpack("=B", rssi)
-    system_nodes[sending_node] = rssi[0]
+    system_nodes[str(sending_node)] = rssi[0]
 
 def coordinate_velocities():
     msg = OverrideRCIn()
@@ -165,8 +167,8 @@ def main():
     net_instantiated = instantiate_zigbee_network()
     arch_instantiated = determine_architecture()
     #rate = rospy.Rate(10)
-    print('Net Instantiated: ', net_instantiated?'yes':'no')
-    print('Arch Instantiated: ', arch_instantiated?'yes':'no')
+    print('Net Instantiated: ', net_instantiated)
+    print('Arch Instantiated: ', arch_instantiated)
     for x in system_nodes:
         print(x, " : ", system_nodes[x])
         
