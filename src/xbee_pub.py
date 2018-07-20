@@ -19,7 +19,7 @@ from digi.xbee.util import utils
 from digi.xbee.io import IOLine, IOMode
 
 system_nodes = {}
-ordered_nodes = []
+rssi_table = []
 
 xbee = ZigBeeDevice("/dev/ttyUSB0", 9600)
 power_level = 1
@@ -94,6 +94,11 @@ def determine_architecture():
                 packet = xbee.read_data()
                 data = packet
             init_rssi_table(packet)
+        self_node = {}
+        self_node["node"] = str(address)
+        self_node["rssi"] = 1000
+        rssi_table.append(self_node)
+        sort_table_by_rssi()
     else:
         data = None
         while data == None:
@@ -129,8 +134,8 @@ def send_rssi_table():
             packet = xbee.read_data()
             data = packet
         val = data.data.decode()
-        global node_database
-        node_database = val
+        global rssi_table
+        rssi_table = val
     return 1
 
 def init_rssi_table(packet):
@@ -139,8 +144,14 @@ def init_rssi_table(packet):
     sending_node = define_node(sending_node)
     rssi = xbee.get_parameter("DB")
     rssi = struct.unpack("=B", rssi)
-    system_nodes[str(sending_node)] = rssi[0]
-    
+    node = {}
+    node["node"] = str(sending_node)
+    node["rssi"] = rssi[0]
+    rssi_table.append(node)
+
+def sort_table_by_rssi():
+    rssi_table.sort(key=lambda val: val["rssi"])
+
 def coordinate_velocities():
     msg = OverrideRCIn()
     msg.channels[0] = yaw
@@ -183,10 +194,10 @@ def main():
     net_instantiated = instantiate_zigbee_network()
     arch_instantiated = determine_architecture()
     #rate = rospy.Rate(10
-    net_instantiated ? 'Net Instantiated' : 'Net not instantiated'
-    arch_instantiated ? 'Architecture Instantiated' : 'Architecture failed to instantiate'
-    for x in system_nodes:
-        print(x, " : ", system_nodes[x])
+    'Net Instantiated' if net_instantiated else 'Net not instantiated'
+    'Architecture Instantiated' if arch_instantiated else 'Architecture failed to instantiate'
+    for x in rssi_table:
+        print(x["node"], " : ", x["rssi"])
     init_complete = 0
     if arch_instantiated and net_instantiated:
         init_complete = send_rssi_table()
