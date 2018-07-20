@@ -120,20 +120,23 @@ def send_rssi_table():
             receive_ack = None
             time_pass = 0
             start_time = time.time()
-            while receive_ack == None:
-                xbee.send_data(node, system_nodes)
-                print('RSSI Table Sent to: ',node)
-                packet = read_data(5)
-                receive_ack = packet
-                time_pass = check_time(start_time, 5)
-                if(time_pass):
-                    return 0
+            table = convert_list_to_bytearr()
+            xbee.send_data(node, table)
+            print('RSSI Table send to: ', node)
+            #while receive_ack == None:
+            #    packet = xbee.read_data()
+            #    receive_ack = packet
+            #    time_pass = check_time(start_time, 5)
+            #    if(time_pass):
+            #        print('Could not send RSSI table to node: ', node)
+            #        return 0
     else:
         data = None
         while data == None:
             packet = xbee.read_data()
             data = packet
-        val = data.data.decode()
+        val = data.data
+        val = convert_bytearr_to_list(val)
         global rssi_table
         rssi_table = val
     return 1
@@ -149,8 +152,28 @@ def init_rssi_table(packet):
     node["rssi"] = rssi[0]
     rssi_table.append(node)
 
+def convert_list_to_bytearr():
+    encoded_val = []
+    for node in rssi_table:
+        id = node["node"]
+        rssi = str(node["rssi"])
+        val = (id, rssi)
+        val = '_'.join(val)
+        encoded_val.append(val)
+    encoded_val = ':'.join(encoded_val)
+    encoded_val = encoded_val.encode()
+    return encoded_val
+
+def convert_bytearr_to_list(bytearr):
+    data = bytearr.decode()
+    print(data)
+
 def sort_table_by_rssi():
     rssi_table.sort(key=lambda val: val["rssi"])
+
+def take_off():
+    #Determine operating mode
+    pass
 
 def coordinate_velocities():
     msg = OverrideRCIn()
@@ -201,7 +224,10 @@ def main():
     init_complete = 0
     if arch_instantiated and net_instantiated:
         init_complete = send_rssi_table()
-
+    
+    #if node_id == 'COORDINATOR':
+    #    takeoff()
+      
     #if init_complete:
         #while (not rospy.is_shutdown()) or mission_status:
             #mission_status = check_time(mission_time, exec_time)
