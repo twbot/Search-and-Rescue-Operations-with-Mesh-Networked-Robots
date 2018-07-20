@@ -26,6 +26,7 @@ power_level = 1
 api_mode = 2
 hierarchy = 0
 node_id = ''
+address = ''
 received_packet = None
 battery = 1
 mission_time = 0
@@ -46,6 +47,8 @@ def instantiate_zigbee_network():
         print("Getting self id")
         global node_id
         node_id = xbee.get_node_id()
+        global address
+        address = str(xbee.get_64bit_addr())
         print("This Node ID: ", node_id)
         print("Is Remote: ", xbee.is_remote())
         print("Power Level: ", xbee.get_power_level())
@@ -64,9 +67,6 @@ def instantiate_zigbee_network():
             time.sleep(0.5)
         global nodes
         nodes = xnet.get_devices()
-        for node in nodes:
-            print(node)
-            print(type(node))
         data = 'Zigbee node %s sending data' % (xbee.get_node_id())
 
         return 1
@@ -93,7 +93,7 @@ def determine_architecture():
             while data  == None:
                 packet = xbee.read_data()
                 data = packet
-            update_rssi_table(packet)
+            init_rssi_table(packet)
     else:
         data = None
         while data == None:
@@ -102,31 +102,45 @@ def determine_architecture():
         val = data.data.decode()
         sending_node = data.remote_device
         if val == 'DATREQ': 
-            xbee.send_data(sending_node, node_id) 
-        print("Value: ", val)
-        print("Sending node: ", sending_node)
-    print('Architecture Determined')
+            xbee.send_data(sending_node, node_id)
     return 1
 
 def define_node(node):
     node = re.findall(r'[\w\d]+', str(node))
     return node
 
-def init_rssi_table():
-    ordered_nodes.sort(key=lambda tup: tup[1])
-    for node in ordered_nodes:
-        print(node)
+def send_rssi_table():
+    if(node_id == 'COORDINATOR'):
+        for node in nodes:
+            receive_ack = None
+            time_pass = 0
+            start_time = time.time()
+            while receive_ack == None:
+                xbee.send_data(node, system_nodes)
+                print('RSSI Table Sent to: ',node)
+                packet = read_data(5)
+                receive_ack = packet
+                time_pass = check_time(start_time, 5)
+                if(time_pass):
+                    return 0
+    else:
+        data = None
+        while data == None:
+            packet = xbee.read_data()
+            data = packet
+        val = data.data.decode()
+        global node_database
+        node_database = val
+    return 1
 
-def update_rssi_table(packet):
+def init_rssi_table(packet):
     val = packet.data.decode()
     sending_node = packet.remote_device
     sending_node = define_node(sending_node)
     rssi = xbee.get_parameter("DB")
     rssi = struct.unpack("=B", rssi)
     system_nodes[str(sending_node)] = rssi[0]
-    print(sending_node)
-    print(rssi)
-
+    
 def coordinate_velocities():
     msg = OverrideRCIn()
     msg.channels[0] = yaw
@@ -146,14 +160,14 @@ def battery_callback():
     if batter_status < .10:
         battery = 0
 
-def check_mission_status():
+def check_time(start_time, wanted_time):
     current_time = time.time()
-    if((current_time - mission_time) > exec_time):
+    if((current_time - start_time) > wanted_time):
         return 1
     return 0
 
 def node_callback(battery_data):
-    batter_status = battery_data.remaining
+    battery_status = battery_data.remaining
     #If battery falls below 10% capacity, notify recipients
     #Mission status: time remaining to travel
 
@@ -168,16 +182,18 @@ def main():
     mission_status = 0
     net_instantiated = instantiate_zigbee_network()
     arch_instantiated = determine_architecture()
-    #init_rssi_table()
-    #rate = rospy.Rate(10)
-    print('Net Instantiated: ', net_instantiated)
-    print('Arch Instantiated: ', arch_instantiated)
+    #rate = rospy.Rate(10
+    net_instantiated ? 'Net Instantiated' : 'Net not instantiated'
+    arch_instantiated ? 'Architecture Instantiated' : 'Architecture failed to instantiate'
     for x in system_nodes:
         print(x, " : ", system_nodes[x])
-        
-    #if net_instantiated and arch_instantiated:
+    init_complete = 0
+    if arch_instantiated and net_instantiated:
+        init_complete = send_rssi_table()
+
+    #if init_complete:
         #while (not rospy.is_shutdown()) or mission_status:
-            #mission_status = check_mission_status()
+            #mission_status = check_time(mission_time, exec_time)
             #rospy.Subscriber("/mavros/battery", BatteryStatus, update_status)
             #coordinate_velocities()
             #rospy.spin()
