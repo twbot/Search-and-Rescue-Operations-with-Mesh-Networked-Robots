@@ -90,10 +90,16 @@ def determine_architecture():
             xbee.send_data(node,"DATREQ")
             print('Data sent')
             data = None
+            time_pass = 0
+            start_time = time.time()
             while data  == None:
                 packet = xbee.read_data()
                 data = packet
-            init_rssi_table(packet)
+                time_pass = check_time(start_time, 6)
+                if(time_pass):
+                    print('Could not retreive data from node: ', node)
+                    return 0
+            init_rssi_table(data)
         self_node = {}
         self_node["node"] = str(address)
         self_node["rssi"] = 1000
@@ -119,17 +125,10 @@ def send_rssi_table():
         for node in nodes:
             receive_ack = None
             time_pass = 0
-            start_time = time.time()
+            #start_time = time.time()
             table = convert_list_to_bytearr()
             xbee.send_data(node, table)
             print('RSSI Table send to: ', node)
-            #while receive_ack == None:
-            #    packet = xbee.read_data()
-            #    receive_ack = packet
-            #    time_pass = check_time(start_time, 5)
-            #    if(time_pass):
-            #        print('Could not send RSSI table to node: ', node)
-            #        return 0
     else:
         data = None
         while data == None:
