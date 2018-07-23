@@ -32,6 +32,8 @@ battery = 1
 mission_time = 0
 exec_time = 15
 nodes = []
+node_rely = None
+node_send = None
 
 pub = rospy.Publisher('/mavros/rc/override', OverrideRCIn, queue_size=10)
 
@@ -102,7 +104,7 @@ def determine_architecture():
             init_rssi_table(data)
         self_node = {}
         self_node["node"] = str(address)
-        self_node["rssi"] = 1000
+        self_node["rssi"] = 0
         rssi_table.append(self_node)
         sort_table_by_rssi()
     else:
@@ -118,9 +120,7 @@ def determine_architecture():
 
 def define_node(node):
     node = re.findall(r'[\w\d]+', str(node))
-    print("Node in define node: ", node)
-    print("Node type in define node: ", type(node))
-    return node
+    return node[0]
 
 def send_rssi_table():
     if(node_id == 'COORDINATOR'):
@@ -137,9 +137,7 @@ def send_rssi_table():
             packet = xbee.read_data()
             data = packet
         val = data.data
-        val = convert_bytearr_to_list(val)
-        global rssi_table
-        rssi_table = val
+        convert_bytearr_to_list(val)
     return 1
 
 def init_rssi_table(packet):
@@ -149,8 +147,6 @@ def init_rssi_table(packet):
     rssi = xbee.get_parameter("DB")
     rssi = struct.unpack("=B", rssi)
     node = {}
-    print(sending_node)
-    print("Type SEnding node: ", type(sending_node))
     node["node"] = str(sending_node)
     node["rssi"] = rssi[0]
     rssi_table.append(node)
@@ -168,12 +164,37 @@ def convert_list_to_bytearr():
     return encoded_val
 
 def convert_bytearr_to_list(bytearr):
-    data = bytearr.decode()
-    print(data)
+    data_list = bytearr.decode()
+    data_list = data.split(':')
+    for data in data_list:
+        data = data.split('_')
+        node = {}
+        node["node"] = data[0]
+        node["rssi"] = data[1]
+        rssi_table.append(node)
 
 def sort_table_by_rssi():
-    rssi_table.sort(key=lambda val: val["rssi"])
+    rssi_table.sort(key=lambda val: val["rssi"], reverse=True)
 
+def determine_neighbors():
+    index = 0
+    for node in rssi_table:
+        if node["node"] = address:
+            index = rssi_table.index(val)
+    global node_rely
+    if index == 0:
+        node_rely = None
+    else:
+        node_rely = rssi_table[index-1]
+        node_rely = node_rely["node"]
+    global node_send
+    if index == len(rssi_table):
+        node_send = None
+    else:
+        node_send = rssi_table[index+1]
+        node_send = node_send["node"]
+    return 1
+    
 def take_off():
     #Determine operating mode
     pass
@@ -222,17 +243,23 @@ def main():
     #rate = rospy.Rate(10
     'Net Instantiated' if net_instantiated else 'Net not instantiated'
     'Architecture Instantiated' if arch_instantiated else 'Architecture failed to instantiate'
-    for x in rssi_table:
-        print(x["node"], " : ", x["rssi"])
     init_complete = 0
     if arch_instantiated and net_instantiated:
         init_complete = send_rssi_table()
     
-        
+    for x in rssi_table:
+        print(x["node"], " : ", x["rssi"])
+    
+    determined_neighbors = 0
+    if init_complete:
+       determined_neighbors = determine_neighbors()
+
+    print("Node rely: ", node_rely)
+    print("Node send: ", node_send)
     #if node_id == 'COORDINATOR':
     #    takeoff()
       
-    #if init_complete:
+    #if determined_neighbors:
         #while (not rospy.is_shutdown()) or mission_status:
             #mission_status = check_time(mission_time, exec_time)
             #rospy.Subscriber("/mavros/battery", BatteryStatus, update_status)
