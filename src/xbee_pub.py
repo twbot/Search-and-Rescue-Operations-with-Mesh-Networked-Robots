@@ -179,7 +179,7 @@ def sort_table_by_rssi():
 def determine_neighbors():
     index = 0
     for node in rssi_table:
-        if node["node"] = address:
+        if node["node"] == address:
             index = rssi_table.index(val)
     global node_rely
     if index == 0:
