@@ -188,7 +188,7 @@ def determine_neighbors():
         node_rely = rssi_table[index-1]
         node_rely = node_rely["node"]
     global node_send
-    if (index-1) == len(rssi_table):
+    if index == (len(rssi_table)-1):
         node_send = None
     else:
         node_send = rssi_table[index+1]
