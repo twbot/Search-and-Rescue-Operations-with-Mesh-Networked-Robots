@@ -174,7 +174,7 @@ def convert_bytearr_to_list(bytearr):
         rssi_table.append(node)
 
 def sort_table_by_rssi():
-    rssi_table.sort(key=lambda val: val["rssi"], reverse=True)
+    rssi_table.sort(key=lambda val: val["rssi"])
 
 def determine_neighbors():
     index = 0
