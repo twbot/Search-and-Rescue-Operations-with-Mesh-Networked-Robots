@@ -165,7 +165,7 @@ def convert_list_to_bytearr():
 
 def convert_bytearr_to_list(bytearr):
     data_list = bytearr.decode()
-    data_list = data.split(':')
+    data_list = data_list.split(':')
     for data in data_list:
         data = data.split('_')
         node = {}
@@ -188,7 +188,7 @@ def determine_neighbors():
         node_rely = rssi_table[index-1]
         node_rely = node_rely["node"]
     global node_send
-    if index == len(rssi_table):
+    if (index-1) == len(rssi_table):
         node_send = None
     else:
         node_send = rssi_table[index+1]
