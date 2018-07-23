@@ -118,6 +118,8 @@ def determine_architecture():
 
 def define_node(node):
     node = re.findall(r'[\w\d]+', str(node))
+    print("Node in define node: ", node)
+    print("Node type in define node: ", type(node))
     return node
 
 def send_rssi_table():
@@ -147,6 +149,8 @@ def init_rssi_table(packet):
     rssi = xbee.get_parameter("DB")
     rssi = struct.unpack("=B", rssi)
     node = {}
+    print(sending_node)
+    print("Type SEnding node: ", type(sending_node))
     node["node"] = str(sending_node)
     node["rssi"] = rssi[0]
     rssi_table.append(node)
@@ -224,6 +228,7 @@ def main():
     if arch_instantiated and net_instantiated:
         init_complete = send_rssi_table()
     
+        
     #if node_id == 'COORDINATOR':
     #    takeoff()
       
