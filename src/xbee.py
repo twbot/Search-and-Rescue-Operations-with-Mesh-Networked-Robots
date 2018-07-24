@@ -18,3 +18,11 @@ def packet_received_callback(packet):
     packet_dict = packet.to_dict()
     api_data = packet_dict[DictKeys.FRAME_SPEC_DATA][DictKeys.API_DATA]
     print(api_data)
+
+def data_received_callback(xbee_message):
+    address = xbee_message.remote_device
+    data = xbee_message.data.decode()
+    return address
+
+
+    

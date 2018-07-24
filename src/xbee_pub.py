@@ -6,8 +6,9 @@ import rospy
 import math
 import xbee as xlib
 import time
-import struct 
+import struct
 import re
+import argparse
 
 from mavros_msgs.msg import OverrideRCIn, BatteryStatus
 #from msg import NodeStatus
@@ -32,7 +33,7 @@ battery = 1
 nodes = []
 node_rely = None
 node_send = None
-throttle = 1560
+rssi_rely = 0
  
 pub = rospy.Publisher('/mavros/rc/override', OverrideRCIn, queue_size=10)
 
@@ -121,6 +122,11 @@ def define_node(node):
     node = re.findall(r'[\w\d]+', str(node))
     return node[0]
 
+def get_RSSI():
+    rssi = xbee.get_parameter("DB")
+    rssi = struct.unpack("=B", rssi)
+    return rssi[0]
+
 def send_rssi_table():
     if(node_id == 'COORDINATOR'):
         for node in nodes:
@@ -143,11 +149,9 @@ def init_rssi_table(packet):
     val = packet.data.decode()
     sending_node = packet.remote_device
     sending_node = define_node(sending_node)
-    rssi = xbee.get_parameter("DB")
-    rssi = struct.unpack("=B", rssi)
     node = {}
     node["node"] = str(sending_node)
-    node["rssi"] = rssi[0]
+    node["rssi"] = get_RSSI()
     rssi_table.append(node)
 
 def convert_list_to_bytearr():
@@ -194,13 +198,26 @@ def determine_neighbors():
         node_send = XBee64BitAddress.from_hex_string(node_send["node"])
     return 1
     
-def take_off():
-    #Determine operating mode
+def takeoff_copter():
     pass
 
-def send_package():
-    if node_send:
-        xbee.send_data_async(node_send, "RSSI_ASSIST")
+def takeoff_rover():
+    pass
+
+def determine_RSSI(received):
+    node = define_node(received)
+    if node == str(node_rely):
+        global rssi_rely
+        rssi_rely = get_RSSI()
+
+def send_ack():
+    xbee.send_data_async(node_send, address)
+
+def coordinate_copter_control():
+    pass
+
+def coordinate_rover_control():
+    pass
 
 def coordinate_velocities():
     msg = OverrideRCIn()
@@ -227,24 +244,21 @@ def check_time(start_time, wanted_time):
         return 1
     return 0
 
-def node_callback(battery_data):
-    battery_status = battery_data.remaining
-    #If battery falls below 10% capacity, notify recipients
-    #Mission status: time remaining to travel
-
 def on_end():
     if xbee is not None and xbee.is_open():
         xbee.close()
         print('Xbee Closed')
 
-def main():
+def main(vehicle_type, velocity):
+    throttle = velocity
+    vehicle = vehicle_type
+
     rospy.init_node('node_status')
     r = rospy.Rate(10)
-    mission_time = time.time()
     mission_status = 0
+
     net_instantiated = instantiate_zigbee_network()
     arch_instantiated = determine_architecture()
-    #rate = rospy.Rate(10)
     'Net Instantiated' if net_instantiated else 'Net not instantiated'
     'Architecture Instantiated' if arch_instantiated else 'Architecture failed to instantiate'
     init_complete = 0
@@ -261,25 +275,40 @@ def main():
     print("Node rely: ", node_rely)
     print("Node send: ", node_send)
     
-    #if node_id == 'COORDINATOR':
-    #    takeoff()
-      
-    #if determined_neighbors:
+    #if node_id == 'COORDINATOR' and vehicle == 'Copter':
+    #    takeoff_copter()
+    
+    #if node_id == 'COORDINATOR' and vehicle == 'Rover':
+    #    takeoff_rover()
+
+    if determined_neighbors:
         exec_time = 15
         mission_start_time = time.time()
-        #while (not rospy.is_shutdown()) or mission_status:
-            #mission_status = check_time(mission_start_time, exec_time)
-            send_package()
+        while (not rospy.is_shutdown()) or mission_status:
+            mission_status = check_time(mission_start_time, exec_time)
+            send_ack()
+            received = xbee.add_data_received_callback(xlib.data_received_callback)
+            determine_RSSI(received)
             rospy.Subscriber("/mavros/battery", BatteryStatus, battery_callback)
-            #coordinate_velocities()
+            if vehicle == 'Copter':
+                coordinate_copter_control()
+            else if vehicle == 'Rover':
+                coordinate_rover_control()
             r.sleep()
     
-    #else:
+    else:
         on_end()
 
     rospy.on_shutdown(on_end)
     
 if __name__ == '__main__':
+
+    # Parse arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('vehicle_type', help='Type of Vehicle: Copter or Rover', required=True)
+    parser.add_argument('init_velocity', help='Initial velocity of vehicles', default=1560)
+    args = parser.parse_args()
+
     rospy.wait_for_service('/mavros/set_mode')
     change_mode = rospy.ServiceProxy('/mavros/set_mode', SetMode)
     response = change_mode(custom_mode="manual")
@@ -287,7 +316,7 @@ if __name__ == '__main__':
     
     if "True" in str(response):
         try:
-            main()
+            main(args.vehicle_type, args.init_velocity)
         except rospy.ROSInterruptException:
             print("Problem changing operating mode")
             pass
