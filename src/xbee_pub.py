@@ -13,7 +13,7 @@ import argparse
 from mavros_msgs.msg import OverrideRCIn, BatteryStatus
 from mavros_msgs.srv import SetMode
 #from msg import NodeStatus
-
+from digi.xbee.models.address import XBee16BitAddress
 from digi.xbee.devices import ZigBeeDevice
 from digi.xbee.packets.base import DictKeys
 from digi.xbee.exception import XBeeException, ConnectionException, ATCommandException, InvalidOperatingModeException
