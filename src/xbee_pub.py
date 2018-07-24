@@ -29,12 +29,11 @@ node_id = ''
 address = ''
 received_packet = None
 battery = 1
-mission_time = 0
-exec_time = 15
 nodes = []
 node_rely = None
 node_send = None
-
+throttle = 1560
+ 
 pub = rospy.Publisher('/mavros/rc/override', OverrideRCIn, queue_size=10)
 
 def instantiate_zigbee_network():
@@ -186,18 +185,22 @@ def determine_neighbors():
         node_rely = None
     else:
         node_rely = rssi_table[index-1]
-        node_rely = node_rely["node"]
+        node_rely = XBee64BitAddress.from_hex_string(node_rely["node"])
     global node_send
     if index == (len(rssi_table)-1):
         node_send = None
     else:
         node_send = rssi_table[index+1]
-        node_send = node_send["node"]
+        node_send = XBee64BitAddress.from_hex_string(node_send["node"])
     return 1
     
 def take_off():
     #Determine operating mode
     pass
+
+def send_package():
+    if node_send:
+        xbee.send_data_async(node_send, "RSSI_ASSIST")
 
 def coordinate_velocities():
     msg = OverrideRCIn()
@@ -211,7 +214,7 @@ def coordinate_velocities():
     msg.channels[7] = 0
     pub.publish(msg)   
 
-def battery_callback():
+def battery_callback(battery_data):
     #Recieve percentage parameter from ros publisher
     battery_status = battery_data.percentage
     #If battery status below 10%, change battery bool
@@ -236,11 +239,12 @@ def on_end():
 
 def main():
     rospy.init_node('node_status')
+    r = rospy.Rate(10)
     mission_time = time.time()
     mission_status = 0
     net_instantiated = instantiate_zigbee_network()
     arch_instantiated = determine_architecture()
-    #rate = rospy.Rate(10
+    #rate = rospy.Rate(10)
     'Net Instantiated' if net_instantiated else 'Net not instantiated'
     'Architecture Instantiated' if arch_instantiated else 'Architecture failed to instantiate'
     init_complete = 0
@@ -252,24 +256,38 @@ def main():
     
     determined_neighbors = 0
     if init_complete:
-       determined_neighbors = determine_neighbors()
+        determined_neighbors = determine_neighbors()
 
     print("Node rely: ", node_rely)
     print("Node send: ", node_send)
+    
     #if node_id == 'COORDINATOR':
     #    takeoff()
       
     #if determined_neighbors:
+        exec_time = 15
+        mission_start_time = time.time()
         #while (not rospy.is_shutdown()) or mission_status:
-            #mission_status = check_time(mission_time, exec_time)
-            #rospy.Subscriber("/mavros/battery", BatteryStatus, update_status)
+            #mission_status = check_time(mission_start_time, exec_time)
+            send_package()
+            rospy.Subscriber("/mavros/battery", BatteryStatus, battery_callback)
             #coordinate_velocities()
-            #rospy.spin()
+            r.sleep()
     
     #else:
-        #rospy.on_shutdown(on_end)
+        on_end()
 
     rospy.on_shutdown(on_end)
     
 if __name__ == '__main__':
-    main()
+    rospy.wait_for_service('/mavros/set_mode')
+    change_mode = rospy.ServiceProxy('/mavros/set_mode', SetMode)
+    response = change_mode(custom_mode="manual")
+    print(response)
+    
+    if "True" in str(response):
+        try:
+            main()
+        except rospy.ROSInterruptException:
+            print("Problem changing operating mode")
+            pass
