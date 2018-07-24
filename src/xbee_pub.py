@@ -211,11 +211,12 @@ def takeoff_rover():
     pass
 
 def determine_RSSI(received):
-    node = define_node(received)
-    if node == str(node_rely.get_64bit_addr()):
-        global rssi_rely
-        rssi_rely = get_RSSI()
-        print(rssi_rely)
+    if node_rely:
+        node = define_node(received)
+        if node == str(node_rely.get_64bit_addr()):
+            global rssi_rely
+            rssi_rely = get_RSSI()
+            print(rssi_rely)
 
 def send_ack():
     if node_send:
