@@ -211,13 +211,14 @@ def takeoff_rover():
     pass
 
 def determine_RSSI(received):
-    if node_rely:
-        node = define_node(received)
-        print(node)
-        if node == str(node_rely.get_64bit_addr()):
-            global rssi_rely
-            rssi_rely = get_RSSI()
-            print(rssi_rely)
+    print(received)
+    # if node_rely:
+    #     node = define_node(received)
+    #     print(node)
+    #     if node == str(node_rely.get_64bit_addr()):
+    #         global rssi_rely
+    #         rssi_rely = get_RSSI()
+    #         print(rssi_rely)
 
 def send_ack():
     if node_send:
@@ -266,7 +267,7 @@ def main(vehicle_type, velocity):
 
     rospy.init_node('node_status')
     r = rospy.Rate(10)
-    mission_status = 0
+    mission_complete = 0
 
     net_instantiated = instantiate_zigbee_network()
     arch_instantiated = determine_architecture()
@@ -295,9 +296,9 @@ def main(vehicle_type, velocity):
     if determined_neighbors:
         exec_time = 15
         mission_start_time = time.time()
-        while (not rospy.is_shutdown()) or mission_status:
-            mission_status = check_time(mission_start_time, exec_time)
-            print("Mission status: ", mission_status)
+        while (not rospy.is_shutdown()) and (not mission_complete):
+            mission_complete = check_time(mission_start_time, exec_time)
+            print("Mission status: ", mission_complete)
             send_ack()
             received = xbee.add_data_received_callback(xlib.data_received_callback)
             determine_RSSI(received)
