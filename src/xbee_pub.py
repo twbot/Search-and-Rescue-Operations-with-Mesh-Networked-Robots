@@ -191,13 +191,17 @@ def determine_neighbors():
         node_rely = None
     else:
         node_rely = rssi_table[index-1]
-        node_rely = XBee64BitAddress.from_hex_string(node_rely["node"])
+        for node in nodes:
+            if node_rely["node"] == node.get_64bit_addr():
+                node_rely = node
     global node_send
     if index == (len(rssi_table)-1):
         node_send = None
     else:
         node_send = rssi_table[index+1]
-        node_send = XBee64BitAddress.from_hex_string(node_send["node"])
+        for node in nodes:
+            if node_send["node"] == node.get_64bit_addr():
+                node_send = node
     return 1
     
 def takeoff_copter():
@@ -208,13 +212,12 @@ def takeoff_rover():
 
 def determine_RSSI(received):
     node = define_node(received)
-    if node == str(node_rely):
+    if node == str(node_rely.get_64bit_addr()):
         global rssi_rely
         rssi_rely = get_RSSI()
         print(rssi_rely)
 
 def send_ack():
-    print(type(node_send))
     xbee.send_data_async(node_send, address)
 
 def coordinate_copter_control():
