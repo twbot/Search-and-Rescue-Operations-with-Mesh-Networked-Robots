@@ -213,6 +213,7 @@ def takeoff_rover():
 def determine_RSSI(received):
     if node_rely:
         node = define_node(received)
+        print(node)
         if node == str(node_rely.get_64bit_addr()):
             global rssi_rely
             rssi_rely = get_RSSI()
@@ -296,6 +297,7 @@ def main(vehicle_type, velocity):
         mission_start_time = time.time()
         while (not rospy.is_shutdown()) or mission_status:
             mission_status = check_time(mission_start_time, exec_time)
+            print("Mission status: ", mission_status)
             send_ack()
             received = xbee.add_data_received_callback(xlib.data_received_callback)
             determine_RSSI(received)
