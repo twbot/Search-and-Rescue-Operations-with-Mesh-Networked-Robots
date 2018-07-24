@@ -35,6 +35,7 @@ nodes = []
 node_rely = None
 node_send = None
 rssi_rely = 0
+data = []
  
 pub = rospy.Publisher('/mavros/rc/override', OverrideRCIn, queue_size=10)
 
@@ -211,14 +212,12 @@ def takeoff_rover():
     pass
 
 def determine_RSSI(received):
-    print(received)
-    # if node_rely:
-    #     node = define_node(received)
-    #     print(node)
-    #     if node == str(node_rely.get_64bit_addr()):
-    #         global rssi_rely
-    #         rssi_rely = get_RSSI()
-    #         print(rssi_rely)
+    if node_rely:
+        node = define_node(received)
+        if node is not None and (node == str(node_rely.get_64bit_addr())):
+            global rssi_rely
+            rssi_rely = get_RSSI()
+            print(rssi_rely)
 
 def send_ack():
     if node_send:
@@ -260,6 +259,8 @@ def on_end():
     if xbee is not None and xbee.is_open():
         xbee.close()
         print('Xbee Closed')
+    for x in data:
+        print("Data: " , x)
 
 def main(vehicle_type, velocity):
     throttle = velocity
@@ -294,13 +295,14 @@ def main(vehicle_type, velocity):
     #    takeoff_rover()
 
     if determined_neighbors:
-        exec_time = 15
+        exec_time = 30
         mission_start_time = time.time()
         while (not rospy.is_shutdown()) and (not mission_complete):
             mission_complete = check_time(mission_start_time, exec_time)
-            print("Mission status: ", mission_complete)
             send_ack()
             received = xbee.add_data_received_callback(xlib.data_received_callback)
+            if received is not None:
+                data.append(received)
             determine_RSSI(received)
             rospy.Subscriber("/mavros/battery", BatteryStatus, battery_callback)
             #if vehicle == 'Copter':
