@@ -13,7 +13,7 @@ import argparse
 from mavros_msgs.msg import OverrideRCIn, BatteryStatus
 from mavros_msgs.srv import SetMode
 #from msg import NodeStatus
-from digi.xbee.models.address import XBee16BitAddress
+from digi.xbee.models.address import XBee64BitAddress
 from digi.xbee.devices import ZigBeeDevice
 from digi.xbee.packets.base import DictKeys
 from digi.xbee.exception import XBeeException, ConnectionException, ATCommandException, InvalidOperatingModeException
@@ -70,6 +70,7 @@ def instantiate_zigbee_network():
             time.sleep(0.5)
         global nodes
         nodes = xnet.get_devices()
+        print(type(nodes[1]))
         data = 'Zigbee node %s sending data' % (xbee.get_node_id())
 
         return 1
@@ -213,6 +214,7 @@ def determine_RSSI(received):
         print(rssi_rely)
 
 def send_ack():
+    print(type(node_send))
     xbee.send_data_async(node_send, address)
 
 def coordinate_copter_control():
@@ -261,7 +263,7 @@ def main(vehicle_type, velocity):
 
     net_instantiated = instantiate_zigbee_network()
     arch_instantiated = determine_architecture()
-    'Net Instantiated' if net_instantiated else 'Net not instantiated'
+    'Net Instantiated' if net_instantiated else 'Net failed to instantiated'
     'Architecture Instantiated' if arch_instantiated else 'Architecture failed to instantiate'
     init_complete = 0
     if arch_instantiated and net_instantiated:
@@ -311,10 +313,17 @@ if __name__ == '__main__':
     parser.add_argument('init_velocity', help='Initial velocity of vehicles', default=1560)
     args = parser.parse_args()
 
-    rospy.wait_for_service('/mavros/set_mode')
-    change_mode = rospy.ServiceProxy('/mavros/set_mode', SetMode)
-    response = change_mode(custom_mode="manual")
-    print(response)
+    response = None
+    if(args.vehicle_type == 'Copter'):
+        rospy.wait_for_service('/mavros/set_mode')
+        change_mode = rospy.ServiceProxy('/mavros/set_mode', SetMode)
+        response = change_mode(custom_mode="guided")
+        print(response)
+    elif(args.vehicle_type == 'Rover'):
+        rospy.wait_for_service('/mavros/set_mode')
+        change_mode = rospy.ServiceProxy('/mavros/set_mode', SetMode)
+        response = change_mode(custom_mode="manual")
+        print(response)
     
     if "True" in str(response):
         try:
