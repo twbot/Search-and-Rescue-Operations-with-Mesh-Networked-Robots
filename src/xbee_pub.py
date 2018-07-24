@@ -214,10 +214,13 @@ def takeoff_rover():
 def determine_RSSI(received):
     if node_rely:
         node = define_node(received)
+        print(node)
         if node is not None and (node == str(node_rely.get_64bit_addr())):
             global rssi_rely
             rssi_rely = get_RSSI()
-            print(rssi_rely)
+            print("RSSI: ", rssi_rely)
+        else:
+            print("Not equal")
 
 def send_ack():
     if node_send:
@@ -302,9 +305,8 @@ def main(vehicle_type, velocity):
             send_ack()
             # received = xbee.add_data_received_callback(xlib.data_received_callback)
             received = xbee.read_data()
-            if received is not None:
-                data.append(received)
-            determine_RSSI(received)
+            if received:
+                determine_RSSI(received)
             rospy.Subscriber("/mavros/battery", BatteryStatus, battery_callback)
             #if vehicle == 'Copter':
             #    coordinate_copter_control()
