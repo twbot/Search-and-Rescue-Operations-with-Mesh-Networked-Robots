@@ -213,14 +213,12 @@ def takeoff_rover():
 
 def determine_RSSI(received):
     if node_rely:
-        # node = define_node(received)
-        print(node)
-        if node is not None and (node == str(node_rely.get_64bit_addr())):
+        sending_node = received.remote_device
+        sending_node = define_node(sending_node)
+        if sending_node is not None and (sending_node == str(node_rely.get_64bit_addr())):
             global rssi_rely
             rssi_rely = get_RSSI()
             print("RSSI: ", rssi_rely)
-        else:
-            print("Not equal")
 
 def send_ack():
     if node_send:
