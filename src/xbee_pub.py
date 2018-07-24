@@ -300,7 +300,8 @@ def main(vehicle_type, velocity):
         while (not rospy.is_shutdown()) and (not mission_complete):
             mission_complete = check_time(mission_start_time, exec_time)
             send_ack()
-            received = xbee.add_data_received_callback(xlib.data_received_callback)
+            # received = xbee.add_data_received_callback(xlib.data_received_callback)
+            received = xbee.read_data()
             if received is not None:
                 data.append(received)
             determine_RSSI(received)
