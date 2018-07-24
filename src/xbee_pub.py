@@ -306,7 +306,7 @@ if __name__ == '__main__':
 
     # Parse arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('vehicle_type', help='Type of Vehicle: Copter or Rover', required=True)
+    parser.add_argument('vehicle_type', help='Type of Vehicle: Copter or Rover', default='Rover')
     parser.add_argument('init_velocity', help='Initial velocity of vehicles', default=1560)
     args = parser.parse_args()
 
