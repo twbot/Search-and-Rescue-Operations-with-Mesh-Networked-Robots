@@ -209,6 +209,7 @@ def determine_RSSI(received):
     if node == str(node_rely):
         global rssi_rely
         rssi_rely = get_RSSI()
+        print(rssi_rely)
 
 def send_ack():
     xbee.send_data_async(node_send, address)
@@ -290,10 +291,10 @@ def main(vehicle_type, velocity):
             received = xbee.add_data_received_callback(xlib.data_received_callback)
             determine_RSSI(received)
             rospy.Subscriber("/mavros/battery", BatteryStatus, battery_callback)
-            if vehicle == 'Copter':
-                coordinate_copter_control()
-            else if vehicle == 'Rover':
-                coordinate_rover_control()
+            #if vehicle == 'Copter':
+            #    coordinate_copter_control()
+            #elif vehicle == 'Rover':
+            #    coordinate_rover_control()
             r.sleep()
     
     else:
