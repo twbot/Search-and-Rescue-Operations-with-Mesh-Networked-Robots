@@ -186,21 +186,23 @@ def determine_neighbors():
     for node in rssi_table:
         if node["node"] == address:
             index = rssi_table.index(node)
-    global node_rely
     if index == 0:
+        global node_rely
         node_rely = None
     else:
-        node_rely = rssi_table[index-1]
+        node_val = rssi_table[index-1]
         for node in nodes:
-            if node_rely["node"] == node.get_64bit_addr():
+            if node_val["node"] == node.get_64bit_addr():
+                global node_rely
                 node_rely = node
-    global node_send
     if index == (len(rssi_table)-1):
+        global node_send
         node_send = None
     else:
-        node_send = rssi_table[index+1]
+        node_val = rssi_table[index+1]
         for node in nodes:
-            if node_send["node"] == node.get_64bit_addr():
+            if node_val["node"] == node.get_64bit_addr():
+                global node_send
                 node_send = node
     return 1
     
