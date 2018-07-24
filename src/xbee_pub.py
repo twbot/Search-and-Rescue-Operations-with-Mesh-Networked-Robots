@@ -11,6 +11,7 @@ import re
 import argparse
 
 from mavros_msgs.msg import OverrideRCIn, BatteryStatus
+from mavros_msgs.srv import SetMode
 #from msg import NodeStatus
 
 from digi.xbee.devices import ZigBeeDevice
