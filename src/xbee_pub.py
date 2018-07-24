@@ -192,7 +192,7 @@ def determine_neighbors():
     else:
         node_val = rssi_table[index-1]
         for node in nodes:
-            if node_val["node"] == node.get_64bit_addr():
+            if node_val["node"] == str(node.get_64bit_addr()):
                 node_rely = node
     global node_send
     if index == (len(rssi_table)-1):
@@ -200,7 +200,7 @@ def determine_neighbors():
     else:
         node_val = rssi_table[index+1]
         for node in nodes:
-            if node_val["node"] == node.get_64bit_addr():
+            if node_val["node"] == str(node.get_64bit_addr()):
                 node_send = node
     return 1
     
@@ -218,7 +218,9 @@ def determine_RSSI(received):
         print(rssi_rely)
 
 def send_ack():
-    xbee.send_data_async(node_send, address)
+    if node_send:
+        xbee.send_data_async(node_send, address)
+        print('Sent Ack')
 
 def coordinate_copter_control():
     pass
