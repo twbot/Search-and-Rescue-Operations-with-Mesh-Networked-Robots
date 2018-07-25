@@ -110,7 +110,7 @@ def determine_architecture():
                     if(time_pass):
                         print('Could not retreive data from node: ', node)
                         return 0
-                    count++
+                count = count + 1
                 sending_node = data.data.decode()
                 rssi_det.append(get_RSSI())
             rssi = sum(rssi_det)/len(rssi_det)
@@ -217,6 +217,7 @@ def determine_neighbors():
     count = 0
     while count < avg_count:
         rssi_hist.append(rssi_rely)
+        count = count + 1
     return 1
     
 def takeoff_copter():
