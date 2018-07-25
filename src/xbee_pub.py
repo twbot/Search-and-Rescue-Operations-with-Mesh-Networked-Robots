@@ -121,14 +121,17 @@ def determine_architecture():
         rssi_table.append(self_node)
         sort_table_by_rssi()
     else:
-        data = None
-        while data == None:
-            packet = xbee.read_data()
-            data = packet
-        val = data.data.decode()
-        sending_node = data.remote_device
-        if val == 'DATREQ': 
-            xbee.send_data(sending_node, node_id)
+        count = 0
+        while count < avg_count:
+            data = None
+            while data == None:
+                packet = xbee.read_data()
+                data = packet
+            val = data.data.decode()
+            sending_node = data.remote_device
+            if val == 'DATREQ': 
+                xbee.send_data(sending_node, node_id)
+            count = count + 1
     return 1
 
 def define_node(node):
