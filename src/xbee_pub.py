@@ -38,7 +38,7 @@ rssi_rely = 0
 data = []
 rssi_avg = 0
 rssi_hist = []
-avg_count = 5
+avg_count = 10
  
 pub = rospy.Publisher('/mavros/rc/override', OverrideRCIn, queue_size=10)
 
@@ -246,7 +246,7 @@ def coordinate_copter_control():
 def coordinate_rover_control():
     pass
 
-def coordinate_velocities():
+def coordinate_velocities(yaw, throttle):
     msg = OverrideRCIn()
     msg.channels[0] = yaw
     msg.channels[1] = 0
@@ -281,6 +281,7 @@ def on_end():
 
 def main(vehicle_type, velocity):
     throttle = velocity
+    yaw = 1370
     vehicle = vehicle_type
 
     rospy.init_node('node_status')
@@ -324,10 +325,10 @@ def main(vehicle_type, velocity):
             rssi_rely = int(sum(rssi_hist[-5:])/len(rssi_hist[-5:]))
             print(rssi_rely)
             rospy.Subscriber("/mavros/battery", BatteryStatus, battery_callback)
-            #if vehicle == 'Copter':
-            #    coordinate_copter_control()
-            #if vehicle == 'Rover':
-            #    coordinate_rover_control()
+            # if vehicle == 'Copter':
+               # coordinate_copter_control()
+            if vehicle == 'Rover':
+               coordinate_velocities(yaw, throttle)
             r.sleep()
     
     else:
