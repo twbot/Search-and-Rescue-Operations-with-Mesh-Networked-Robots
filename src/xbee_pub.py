@@ -327,8 +327,8 @@ def main(vehicle_type, velocity):
             rospy.Subscriber("/mavros/battery", BatteryStatus, battery_callback)
             # if vehicle == 'Copter':
                # coordinate_copter_control()
-            if vehicle == 'Rover':
-               coordinate_velocities(yaw, throttle)
+            # if vehicle == 'Rover':
+               # coordinate_velocities(yaw, throttle)
             r.sleep()
     
     else:
