@@ -277,6 +277,8 @@ def on_end():
         xbee.close()
         print('Xbee Closed')
     print(rssi_hist)
+    print(type(rssi_hist[0]))
+    print(type(rssi_hist[6]))
 
 def main(vehicle_type, velocity):
     throttle = velocity
@@ -320,8 +322,8 @@ def main(vehicle_type, velocity):
             received = xbee.read_data()
             if received:
                 determine_RSSI(received)
-            rssi_rely = sum(rssi_hist[-5:])/len(rssi_hist[-5:])
-            print(rssi_rely)
+            # rssi_rely = sum(rssi_hist[-5:])/len(rssi_hist[-5:])
+            # print(rssi_rely)
             rospy.Subscriber("/mavros/battery", BatteryStatus, battery_callback)
             #if vehicle == 'Copter':
             #    coordinate_copter_control()
