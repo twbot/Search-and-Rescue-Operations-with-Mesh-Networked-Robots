@@ -140,7 +140,7 @@ def define_node(node):
 def get_RSSI():
     rssi = xbee.get_parameter("DB")
     rssi = struct.unpack("=B", rssi)
-    return rssi[0]
+    return int(rssi[0])
 
 def send_rssi_table():
     if(node_id == 'COORDINATOR'):
@@ -321,7 +321,7 @@ def main(vehicle_type, velocity):
             received = xbee.read_data()
             if received:
                 determine_RSSI(received)
-            rssi_rely = sum(rssi_hist[-5:])/len(rssi_hist[-5:])
+            rssi_rely = int(sum(rssi_hist[-5:])/len(rssi_hist[-5:]))
             print(rssi_rely)
             rospy.Subscriber("/mavros/battery", BatteryStatus, battery_callback)
             #if vehicle == 'Copter':
