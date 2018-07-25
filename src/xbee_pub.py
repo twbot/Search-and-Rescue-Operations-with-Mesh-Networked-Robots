@@ -311,7 +311,7 @@ def main(vehicle_type, velocity):
     #    takeoff_rover()
 
     if determined_neighbors:
-        exec_time = 45
+        exec_time = 30
         mission_start_time = time.time()
         while (not rospy.is_shutdown()) and (not mission_complete):
             mission_complete = check_time(mission_start_time, exec_time)
@@ -321,6 +321,7 @@ def main(vehicle_type, velocity):
             if received:
                 determine_RSSI(received)
             rssi_rely = sum(rssi_hist[-5:])/len(rssi_hist[-5:])
+            print(rssi_rely)
             rospy.Subscriber("/mavros/battery", BatteryStatus, battery_callback)
             #if vehicle == 'Copter':
             #    coordinate_copter_control()
