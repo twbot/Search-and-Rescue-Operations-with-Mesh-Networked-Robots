@@ -111,7 +111,7 @@ def determine_architecture():
                         print('Could not retreive data from node: ', node)
                         return 0
                 count = count + 1
-                sending_node = data.data.decode()
+                sending_node = data.remote_device
                 rssi_det.append(get_RSSI())
             rssi = sum(rssi_det)/len(rssi_det)
             init_rssi_table(sending_node, rssi)
@@ -161,7 +161,6 @@ def send_rssi_table():
     return 1
 
 def init_rssi_table(node_sent, rssi):
-    sending_node = node_sent.remote_device
     sending_node = define_node(sending_node)
     node = {}
     node["node"] = str(sending_node)
