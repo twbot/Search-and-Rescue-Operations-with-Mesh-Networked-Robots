@@ -112,7 +112,7 @@ def determine_architecture():
                 count = count + 1
                 sending_node = data.remote_device
                 rssi_det.append(get_RSSI())
-            rssi = sum(rssi_det)/len(rssi_det)
+            rssi = int(sum(rssi_det)/len(rssi_det))
             init_rssi_table(sending_node, rssi)
         self_node = {}
         self_node["node"] = str(address)
@@ -140,7 +140,7 @@ def define_node(node):
 def get_RSSI():
     rssi = xbee.get_parameter("DB")
     rssi = struct.unpack("=B", rssi)
-    return int(rssi[0])
+    return rssi[0]
 
 def send_rssi_table():
     if(node_id == 'COORDINATOR'):
@@ -217,7 +217,7 @@ def determine_neighbors():
     #Update RSSI history table with current value RSSI
     count = 0
     while count < avg_count:
-        rssi_hist.append(int(rssi_rely))
+        rssi_hist.append(rssi_rely)
         count = count + 1
     return 1
     
