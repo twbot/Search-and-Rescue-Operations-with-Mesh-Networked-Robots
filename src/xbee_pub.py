@@ -36,6 +36,9 @@ node_rely = None
 node_send = None
 rssi_rely = 0
 data = []
+rssi_avg = 0
+rssi_hist = []
+avg_count = 5
  
 pub = rospy.Publisher('/mavros/rc/override', OverrideRCIn, queue_size=10)
 
@@ -92,19 +95,26 @@ def instantiate_zigbee_network():
 def determine_architecture():
     if(node_id == 'COORDINATOR'):
         for node in nodes:
-            xbee.send_data(node,"DATREQ")
-            print('Data sent')
-            data = None
-            time_pass = 0
-            start_time = time.time()
-            while data  == None:
-                packet = xbee.read_data()
-                data = packet
-                time_pass = check_time(start_time, 6)
-                if(time_pass):
-                    print('Could not retreive data from node: ', node)
-                    return 0
-            init_rssi_table(data)
+            count = 0
+            sending_node = None
+            rssi_det = []
+            while count < avg_count:
+                xbee.send_data(node,"DATREQ")
+                data = None
+                time_pass = 0
+                start_time = time.time()
+                while data == None:
+                    packet = xbee.read_data()
+                    data = packet
+                    time_pass = check_time(start_time, 6)
+                    if(time_pass):
+                        print('Could not retreive data from node: ', node)
+                        return 0
+                    count++
+                sending_node = data.data.decode()
+                rssi_det.append(get_RSSI())
+            rssi = sum(rssi_det)/len(rssi_det)
+            init_rssi_table(sending_node, rssi)
         self_node = {}
         self_node["node"] = str(address)
         self_node["rssi"] = 0
@@ -135,7 +145,6 @@ def send_rssi_table():
         for node in nodes:
             receive_ack = None
             time_pass = 0
-            #start_time = time.time()
             table = convert_list_to_bytearr()
             xbee.send_data(node, table)
             print('RSSI Table send to: ', node)
@@ -148,13 +157,12 @@ def send_rssi_table():
         convert_bytearr_to_list(val)
     return 1
 
-def init_rssi_table(packet):
-    val = packet.data.decode()
-    sending_node = packet.remote_device
+def init_rssi_table(node_sent, rssi):
+    sending_node = node_sent.remote_device
     sending_node = define_node(sending_node)
     node = {}
     node["node"] = str(sending_node)
-    node["rssi"] = get_RSSI()
+    node["rssi"] = rssi
     rssi_table.append(node)
 
 def convert_list_to_bytearr():
@@ -187,6 +195,8 @@ def determine_neighbors():
     for node in rssi_table:
         if node["node"] == address:
             index = rssi_table.index(node)
+            global rssi_rely
+            rssi_rely = node["rssi"]
     global node_rely
     if index == 0:
         node_rely = None
@@ -203,6 +213,10 @@ def determine_neighbors():
         for node in nodes:
             if node_val["node"] == str(node.get_64bit_addr()):
                 node_send = node
+    #Update RSSI history table with current value RSSI
+    count = 0
+    while count < avg_count:
+        rssi_hist.append(rssi_rely)
     return 1
     
 def takeoff_copter():
@@ -216,9 +230,8 @@ def determine_RSSI(received):
         sending_node = received.remote_device
         sending_node = define_node(sending_node)
         if sending_node is not None and (sending_node == str(node_rely.get_64bit_addr())):
-            global rssi_rely
-            rssi_rely = get_RSSI()
-            print("RSSI: ", rssi_rely)
+            rssi = get_RSSI()
+            rssi_hist.append(rssi)
 
 def send_ack():
     if node_send:
@@ -260,15 +273,14 @@ def on_end():
     if xbee is not None and xbee.is_open():
         xbee.close()
         print('Xbee Closed')
-    for x in data:
-        print("Data: " , x)
+    print(rssi_hist)
 
 def main(vehicle_type, velocity):
     throttle = velocity
     vehicle = vehicle_type
 
     rospy.init_node('node_status')
-    r = rospy.Rate(10)
+    r = rospy.Rate(30)
     mission_complete = 0
 
     net_instantiated = instantiate_zigbee_network()
@@ -296,7 +308,7 @@ def main(vehicle_type, velocity):
     #    takeoff_rover()
 
     if determined_neighbors:
-        exec_time = 30
+        exec_time = 45
         mission_start_time = time.time()
         while (not rospy.is_shutdown()) and (not mission_complete):
             mission_complete = check_time(mission_start_time, exec_time)
@@ -305,10 +317,11 @@ def main(vehicle_type, velocity):
             received = xbee.read_data()
             if received:
                 determine_RSSI(received)
+            rssi_rely = sum(rssi_hist[-5:])/len(rssi_hist[-5:])
             rospy.Subscriber("/mavros/battery", BatteryStatus, battery_callback)
             #if vehicle == 'Copter':
             #    coordinate_copter_control()
-            #elif vehicle == 'Rover':
+            #if vehicle == 'Rover':
             #    coordinate_rover_control()
             r.sleep()
     
