@@ -161,7 +161,7 @@ def send_rssi_table():
     return 1
 
 def init_rssi_table(node_sent, rssi):
-    sending_node = define_node(sending_node)
+    sending_node = define_node(node_sent)
     node = {}
     node["node"] = str(sending_node)
     node["rssi"] = rssi
