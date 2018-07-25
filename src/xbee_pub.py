@@ -74,7 +74,6 @@ def instantiate_zigbee_network():
             time.sleep(0.5)
         global nodes
         nodes = xnet.get_devices()
-        print(type(nodes[1]))
         data = 'Zigbee node %s sending data' % (xbee.get_node_id())
 
         return 1
