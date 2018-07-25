@@ -218,7 +218,7 @@ def determine_neighbors():
     #Update RSSI history table with current value RSSI
     count = 0
     while count < avg_count:
-        rssi_hist.append(rssi_rely)
+        rssi_hist.append(int(rssi_rely))
         count = count + 1
     return 1
     
@@ -322,8 +322,8 @@ def main(vehicle_type, velocity):
             received = xbee.read_data()
             if received:
                 determine_RSSI(received)
-            # rssi_rely = sum(rssi_hist[-5:])/len(rssi_hist[-5:])
-            # print(rssi_rely)
+            rssi_rely = sum(rssi_hist[-5:])/len(rssi_hist[-5:])
+            print(rssi_rely)
             rospy.Subscriber("/mavros/battery", BatteryStatus, battery_callback)
             #if vehicle == 'Copter':
             #    coordinate_copter_control()
