@@ -197,7 +197,7 @@ def determine_neighbors():
         if node["node"] == address:
             index = rssi_table.index(node)
             global rssi_rely
-            rssi_rely = node["rssi"]
+            rssi_rely = int(node["rssi"])
     global node_rely
     if index == 0:
         node_rely = None
