@@ -243,7 +243,8 @@ def send_ack():
 def coordinate_copter_control():
     pass
 
-def coordinate_rover_control():
+def coordinate_rover_control(throttle):
+    # yaw = 
     pass
 
 def coordinate_velocities(yaw, throttle):
@@ -323,12 +324,12 @@ def main(vehicle_type, velocity):
             if received:
                 determine_RSSI(received)
             rssi_rely = int(sum(rssi_hist[-5:])/len(rssi_hist[-5:]))
-            print(rssi_rely)
             rospy.Subscriber("/mavros/battery", BatteryStatus, battery_callback)
+            rospy.loginfo("RSSI Val: ", rssi_rely)
             # if vehicle == 'Copter':
                # coordinate_copter_control()
             # if vehicle == 'Rover':
-               # coordinate_velocities(yaw, throttle)
+               # coordinate_rover_control(throttle)
             r.sleep()
     
     else:
@@ -341,7 +342,7 @@ if __name__ == '__main__':
     # Parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('vehicle_type', help='Type of Vehicle: Copter or Rover', choices=['Rover', 'Copter'],  default='Rover')
-    parser.add_argument('init_velocity', help='Initial velocity of vehicles', default=1560)
+    parser.add_argument('init_velocity', help='Initial velocity of vehicles', default=1555)
     args = parser.parse_args()
 
     response = None
