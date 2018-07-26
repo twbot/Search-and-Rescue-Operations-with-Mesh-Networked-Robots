@@ -38,7 +38,7 @@ rssi_rely = 0
 data = []
 rssi_avg = 0
 rssi_hist = []
-avg_count = 10
+avg_count = 50
  
 pub = rospy.Publisher('/mavros/rc/override', OverrideRCIn, queue_size=10)
 
