@@ -325,7 +325,8 @@ def main(vehicle_type, velocity):
                 determine_RSSI(received)
             rssi_rely = int(sum(rssi_hist[-5:])/len(rssi_hist[-5:]))
             rospy.Subscriber("/mavros/battery", BatteryStatus, battery_callback)
-            rospy.loginfo("RSSI Val: ", rssi_rely)
+            rospy.loginfo("RSSI Val: ")
+            rospy.loginfo(rssi_rely)
             # if vehicle == 'Copter':
                # coordinate_copter_control()
             # if vehicle == 'Rover':
