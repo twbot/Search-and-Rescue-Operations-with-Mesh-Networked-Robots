@@ -9,9 +9,10 @@ import time
 import struct
 import re
 import argparse
+import math
 
 from mavros_msgs.msg import OverrideRCIn, BatteryStatus
-from mavros_msgs.srv import SetMode
+from mavros_msgs.srv import SetMode, CommandBool, CommandTOL
 #from msg import NodeStatus
 from digi.xbee.models.address import XBee64BitAddress
 from digi.xbee.devices import ZigBeeDevice
@@ -37,13 +38,17 @@ node_send = None
 rssi_rely = 0
 rssi_margin_left = 0
 rssi_margin_right = 0
+rssi_thresh_right = 0
+rssi_thresh_left = 0
 current_rssi = 0
 data = []
 rssi_avg = 0
 rssi_hist = []
 avg_count = 5
- 
-pub = rospy.Publisher('/mavros/rc/override', OverrideRCIn, queue_size=10)
+rssi_margin = 5
+rssi_thresh = 15
+
+rc_pub = rospy.Publisher('/mavros/rc/override', OverrideRCIn, queue_size=10)
 
 def instantiate_zigbee_network():
     try:
@@ -110,7 +115,8 @@ def determine_architecture():
                     data = packet
                     time_pass = check_time(start_time, 6)
                     if(time_pass):
-                        print('Could not retreive data from node: ', node)
+                        rospy.logerr('Could not retreive data from node: ')
+                        rospy.logerr(node)
                         return 0
                 count = count + 1
                 sending_node = data.remote_device
@@ -196,6 +202,14 @@ def determine_neighbors():
             index = rssi_table.index(node)
             global rssi_rely
             rssi_rely = int(node["rssi"])
+            global rssi_margin_right
+            rssi_margin_right = rssi_rely + rssi_margin
+            global rssi_margin_left
+            rssi_margin_left = rssi_rely - rssi_margin
+            global rssi_thresh_left
+            rssi_thresh_left = rssi_rely - rssi_thresh
+            global rssi_thresh_right
+            rssi_thresh_right = rssi_rely + rssi_thresh
     global node_rely
     if index == 0:
         node_rely = None
@@ -220,7 +234,30 @@ def determine_neighbors():
     return 1
     
 def takeoff_copter():
-    pass
+    rospy.wait_for_service('/mavros/cmd/arming')
+    arming = rospy.ServiceProxy('/mavros/cmd/arming', CommandBool)
+    response = arming(value=True)
+    if not "True" in str(response):
+        rospy.logerr('Could not arm copter for takeoff')
+        return 0
+    rospy.wait_for_service('/mavros/cmd/takeoff')
+    takeoff = rospy.ServiceProxy('/mavros/cmd/takeoff', CommandTOL)
+    response = takeoff(altitude=5, latitude=0, longitude=0, min_pitch=0, yaw=0)
+    if not "True" in str(response):
+        rospy.logerr('Failed takeoff')
+        return 0
+    else:
+        return 1
+
+def land_copter():
+    rospy.wait_for_service('/mavros/cmd/land')
+    land = rospy.ServiceProxy('/mavros/cmd/land', CommandTOL)
+    response = land(altitude=5, latitude=0, longitude=0, min_pitch=0, yaw=0)
+    if not "True" in str(response):
+        rospy.logerr('Failed land')
+        return 0
+    else:
+        return 1
 
 def takeoff_rover():
     pass
@@ -240,14 +277,36 @@ def send_ack(throttle):
         xbee.send_data_async(node_send, throttle)
 
 def coordinate_copter_control():
+    # coordinate_copter_velocities()
     pass
 
 def coordinate_rover_control(throttle):
-    magnitude = abs(rs)
-    yaw = 
-    pass
+    yaw = 1500
+    scale = 5
+    steer_range = 400
 
-def coordinate_velocities(yaw, throttle):
+    if rssi_rely < rssi_margin_right and rssi_rely > rssi_margin_left:
+        coordinate_rover_velocities(yaw, throttle)
+    else:
+        value = rssi_rely - current_rssi
+        magnitude = abs(value)
+        value_scaled = (magnitude/rssi_thresh)*scale
+
+        def function(x):
+            return math.pow(math.e, (x-math.e))
+
+        steer_angle = function(value_scaled)
+        if value < 0:
+            yaw = (steer_angle/scale)*steer_range+1100
+        elif value > 0:
+            yaw = (steer_angle/scale)*steer_range+1500
+        if (yaw > 1900):
+            yaw = 1900
+        elif (yaw < 1100):
+            yaw = 1100
+        coordinate_rover_velocities(yaw, throttle)
+
+def coordinate_rover_velocities(yaw, throttle):
     msg = OverrideRCIn()
     msg.channels[0] = yaw
     msg.channels[1] = 0
@@ -257,7 +316,19 @@ def coordinate_velocities(yaw, throttle):
     msg.channels[5] = 0
     msg.channels[6] = 0
     msg.channels[7] = 0
-    pub.publish(msg)   
+    rc_pub.publish(msg)   
+
+def coordinate_copter_velocities(roll, pitch, throttle, yaw):
+    msg = OverrideRCIn()
+    msg.channels[0] = roll
+    msg.channels[1] = pitch
+    msg.channels[2] = throttle
+    msg.channels[3] = yaw
+    msg.channels[4] = 0
+    msg.channels[5] = 0
+    msg.channels[6] = 0
+    msg.channels[7] = 0
+    rc_pub.publish(msg)   
 
 def battery_callback(battery_data):
     #Recieve percentage parameter from ros publisher
@@ -272,15 +343,16 @@ def check_time(start_time, wanted_time):
         return 1
     return 0
 
-def on_end():
+def on_end(vehicle):
     if xbee is not None and xbee.is_open():
         xbee.close()
         print('Xbee Closed')
+    # if vehicle == 'Copter':
+        # land_copter()
     print(rssi_hist)
 
 def main(vehicle_type, velocity):
     throttle = velocity
-    yaw = 1370
     vehicle = vehicle_type
 
     rospy.init_node('Search_Run')
@@ -305,8 +377,8 @@ def main(vehicle_type, velocity):
     print("Node rely: ", node_rely)
     print("Node send: ", node_send)
     
-    #if node_id == 'COORDINATOR' and vehicle == 'Copter':
-    #    takeoff_copter()
+    # if node_id == 'COORDINATOR' and vehicle == 'Copter':
+       # takeoff_copter()
     
     #if node_id == 'COORDINATOR' and vehicle == 'Rover':
     #    takeoff_rover()
@@ -317,24 +389,23 @@ def main(vehicle_type, velocity):
         while (not rospy.is_shutdown()) and (not mission_complete):
             mission_complete = check_time(mission_start_time, exec_time)
             send_ack(throttle)
-            # received = xbee.add_data_received_callback(xlib.data_received_callback)
             received = xbee.read_data()
             if received:
                 throttle = determine_RSSI(received)
-            rssi_rely = int(sum(rssi_hist[-5:])/len(rssi_hist[-5:]))
+            current_rssi = int(sum(rssi_hist[-5:])/len(rssi_hist[-5:]))
             rospy.Subscriber("/mavros/battery", BatteryStatus, battery_callback)
             rospy.loginfo("RSSI Val: ")
-            rospy.loginfo(rssi_rely)
-            rospy.logerr("Throttle: ")
-            rospy.logerr(throttle)
+            rospy.loginfo(current_rssi)
+            rospy.loginfo("Throttle: ")
+            rospy.loginfo(throttle)
             # if vehicle == 'Copter':
                # coordinate_copter_control()
-            # if vehicle == 'Rover':
-               # coordinate_rover_control(throttle)
+            if vehicle == 'Rover' and node_id != 'COORDINATOR':
+               coordinate_rover_control(throttle)
             r.sleep()
     
     else:
-        on_end()
+        on_end(vehicle)
 
     rospy.on_shutdown(on_end)
     
@@ -362,5 +433,5 @@ if __name__ == '__main__':
         try:
             main(args.vehicle_type, args.init_velocity)
         except rospy.ROSInterruptException:
-            print("Problem changing operating mode")
+            rospy.logerr("Problem changing operating mode")
             pass
