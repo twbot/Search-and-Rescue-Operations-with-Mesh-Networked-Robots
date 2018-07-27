@@ -35,10 +35,13 @@ nodes = []
 node_rely = None
 node_send = None
 rssi_rely = 0
+rssi_margin_left = 0
+rssi_margin_right = 0
+current_rssi = 0
 data = []
 rssi_avg = 0
 rssi_hist = []
-avg_count = 50
+avg_count = 5
  
 pub = rospy.Publisher('/mavros/rc/override', OverrideRCIn, queue_size=10)
 
@@ -111,7 +114,7 @@ def determine_architecture():
                         return 0
                 count = count + 1
                 sending_node = data.remote_device
-                rssi_det.append(get_RSSI())
+                rssi_det.append(data.data.decode())
             rssi = int(sum(rssi_det)/len(rssi_det))
             init_rssi_table(sending_node, rssi)
         self_node = {}
@@ -128,19 +131,15 @@ def determine_architecture():
                 data = packet
             val = data.data.decode()
             sending_node = data.remote_device
-            if val == 'DATREQ': 
-                xbee.send_data(sending_node, node_id)
+            if val == 'DATREQ':
+                rssi = xlib.get_RSSI()
+                xbee.send_data(sending_node, rssi)
             count = count + 1
     return 1
 
 def define_node(node):
     node = re.findall(r'[\w\d]+', str(node))
     return node[0]
-
-def get_RSSI():
-    rssi = xbee.get_parameter("DB")
-    rssi = struct.unpack("=B", rssi)
-    return rssi[0]
 
 def send_rssi_table():
     if(node_id == 'COORDINATOR'):
@@ -149,7 +148,6 @@ def send_rssi_table():
             time_pass = 0
             table = convert_list_to_bytearr()
             xbee.send_data(node, table)
-            print('RSSI Table send to: ', node)
     else:
         data = None
         while data == None:
@@ -230,21 +228,23 @@ def takeoff_rover():
 def determine_RSSI(received):
     if node_rely:
         sending_node = received.remote_device
+        throttle = received.data.decode()
         sending_node = define_node(sending_node)
         if sending_node is not None and (sending_node == str(node_rely.get_64bit_addr())):
-            rssi = get_RSSI()
+            rssi = xlib.get_RSSI()
             rssi_hist.append(rssi)
+        return throttle
 
-def send_ack():
+def send_ack(throttle):
     if node_send:
-        xbee.send_data_async(node_send, address)
-        print('Sent Ack')
+        xbee.send_data_async(node_send, throttle)
 
 def coordinate_copter_control():
     pass
 
 def coordinate_rover_control(throttle):
-    # yaw = 
+    magnitude = abs(rs)
+    yaw = 
     pass
 
 def coordinate_velocities(yaw, throttle):
@@ -277,15 +277,13 @@ def on_end():
         xbee.close()
         print('Xbee Closed')
     print(rssi_hist)
-    print(type(rssi_hist[0]))
-    print(type(rssi_hist[6]))
 
 def main(vehicle_type, velocity):
     throttle = velocity
     yaw = 1370
     vehicle = vehicle_type
 
-    rospy.init_node('node_status')
+    rospy.init_node('Search_Run')
     r = rospy.Rate(30)
     mission_complete = 0
 
@@ -318,15 +316,17 @@ def main(vehicle_type, velocity):
         mission_start_time = time.time()
         while (not rospy.is_shutdown()) and (not mission_complete):
             mission_complete = check_time(mission_start_time, exec_time)
-            send_ack()
+            send_ack(throttle)
             # received = xbee.add_data_received_callback(xlib.data_received_callback)
             received = xbee.read_data()
             if received:
-                determine_RSSI(received)
+                throttle = determine_RSSI(received)
             rssi_rely = int(sum(rssi_hist[-5:])/len(rssi_hist[-5:]))
             rospy.Subscriber("/mavros/battery", BatteryStatus, battery_callback)
             rospy.loginfo("RSSI Val: ")
             rospy.loginfo(rssi_rely)
+            rospy.logerr("Throttle: ")
+            rospy.logerr(throttle)
             # if vehicle == 'Copter':
                # coordinate_copter_control()
             # if vehicle == 'Rover':

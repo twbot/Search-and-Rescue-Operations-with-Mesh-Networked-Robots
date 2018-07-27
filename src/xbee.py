@@ -24,5 +24,8 @@ def data_received_callback(xbee_message):
     data = xbee_message.data.decode()
     return address
 
-
+def get_RSSI():
+    rssi = xbee.get_parameter("DB")
+    rssi = struct.unpack("=B", rssi)
+    return rssi[0]
     
