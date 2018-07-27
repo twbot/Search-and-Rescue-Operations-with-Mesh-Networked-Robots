@@ -294,7 +294,7 @@ def coordinate_rover_control(throttle):
         coordinate_rover_velocities(yaw, throttle)
         rospy.logerr("Going Straight")
     else:
-        value = rssi_rely - current_rssi
+        value = int(current_rssi) - int(rssi_rely)
         magnitude = abs(value)
         value_scaled = (magnitude/rssi_thresh)*scale
 
