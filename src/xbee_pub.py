@@ -290,16 +290,8 @@ def coordinate_rover_control(throttle):
     scale = 5
     steer_range = 400
 
-    if rssi_rely < rssi_margin_right and rssi_rely > rssi_margin_left:
+    if current_rssi < rssi_margin_right and current_rssi > rssi_margin_left:
         coordinate_rover_velocities(yaw, throttle)
-        rospy.loginfo("Yaw not moving")
-        rospy.loginfo(yaw)
-        rospy.loginfo("RSSI Rely")
-        rospy.loginfo(rssi_rely)
-        rospy.loginfo("RSSI Rely Margin RIght")
-        rospy.loginfo(rssi_margin_right)
-        rospy.loginfo("RSSI Rely Margin Left")
-        rospy.loginfo(rssi_margin_left)
     else:
         value = rssi_rely - current_rssi
         magnitude = abs(value)
