@@ -139,7 +139,7 @@ def determine_architecture():
             val = data.data.decode()
             sending_node = data.remote_device
             if val == 'DATREQ':
-                rssi = xlib.get_RSSI()
+                rssi = get_RSSI()
                 xbee.send_data(sending_node, rssi)
             count = count + 1
     return 1
@@ -269,7 +269,7 @@ def determine_RSSI(received):
         throttle = received.data.decode()
         sending_node = define_node(sending_node)
         if sending_node is not None and (sending_node == str(node_rely.get_64bit_addr())):
-            rssi = xlib.get_RSSI()
+            rssi = get_RSSI()
             rssi_hist.append(rssi)
         return throttle
 
@@ -342,7 +342,7 @@ def get_RSSI():
     rssi = xbee.get_parameter("DB")
     rssi = struct.unpack("=B", rssi)
     return rssi[0]
-    
+
 def check_time(start_time, wanted_time):
     current_time = time.time()
     if((current_time - start_time) > wanted_time):
