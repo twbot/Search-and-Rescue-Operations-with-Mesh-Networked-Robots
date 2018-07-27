@@ -140,6 +140,7 @@ def determine_architecture():
             sending_node = data.remote_device
             if val == 'DATREQ':
                 rssi = get_RSSI()
+                rssi = rssi.encode()
                 xbee.send_data(sending_node, rssi)
             count = count + 1
     return 1
