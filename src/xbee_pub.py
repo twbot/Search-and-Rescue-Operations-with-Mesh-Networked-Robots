@@ -25,7 +25,7 @@ system_nodes = {}
 rssi_table = []
 
 xbee = ZigBeeDevice("/dev/ttyUSB0", 9600)
-power_level = 1
+power_level = 2
 api_mode = 2
 hierarchy = 0
 node_id = ''
@@ -45,8 +45,8 @@ data = []
 rssi_avg = 0
 rssi_hist = []
 avg_count = 5
-rssi_margin = 5
-rssi_thresh = 15
+rssi_margin = 3
+rssi_thresh = 10
 vehicle = None
 
 rc_pub = rospy.Publisher('/mavros/rc/override', OverrideRCIn, queue_size=10)
