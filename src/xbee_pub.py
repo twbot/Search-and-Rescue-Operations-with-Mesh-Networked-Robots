@@ -282,6 +282,9 @@ def coordinate_copter_control():
     # coordinate_copter_velocities()
     pass
 
+def unsigned(n):
+    return n & 0xFFFFFFFF
+
 def coordinate_rover_control(throttle):
     yaw = 1500
     scale = 5
@@ -306,8 +309,8 @@ def coordinate_rover_control(throttle):
             yaw = 1900
         elif (yaw < 1100):
             yaw = 1100
-        yaw = int(yaw)
-        throttle = int(throttle)
+        yaw = unsigned(yaw)
+        throttle = unsigned(throttle)
         coordinate_rover_velocities(yaw, throttle)
 
 def coordinate_rover_velocities(yaw, throttle):
