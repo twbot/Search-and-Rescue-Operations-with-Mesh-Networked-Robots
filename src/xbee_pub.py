@@ -313,7 +313,7 @@ def coordinate_rover_control(throttle):
 
 def coordinate_rover_velocities(yaw, throttle):
     yaw = unsigned(int(yaw))
-    throttle = unsigned(int(throttle))
+    throttle = 1555
     msg = OverrideRCIn()
     msg.channels[0] = yaw
     msg.channels[1] = 0
