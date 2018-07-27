@@ -142,7 +142,7 @@ def determine_architecture():
             if val == 'DATREQ':
                 rssi = get_RSSI()
                 string = ''
-                string += struct.pack('=B',rssi)
+                string += struct.pack('!B',rssi)
                 xbee.send_data(sending_node, string)
             count = count + 1
     return 1
