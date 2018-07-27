@@ -121,6 +121,7 @@ def determine_architecture():
                         return 0
                 count = count + 1
                 sending_node = data.remote_device
+                rssi = struct.unpack("=B", rssi)
                 rssi_det.append(data.data.decode())
             rssi = int(sum(rssi_det)/len(rssi_det))
             init_rssi_table(sending_node, rssi)
@@ -140,8 +141,9 @@ def determine_architecture():
             sending_node = data.remote_device
             if val == 'DATREQ':
                 rssi = get_RSSI()
-                rssi = rssi.encode()
-                xbee.send_data(sending_node, rssi)
+                string = ''
+                string += struct.pack('=B',rssi)
+                xbee.send_data(sending_node, string)
             count = count + 1
     return 1
 
