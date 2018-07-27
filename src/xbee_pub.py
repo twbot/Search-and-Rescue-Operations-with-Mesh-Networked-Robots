@@ -300,9 +300,9 @@ def coordinate_rover_control(throttle):
         def function(x):
             return math.pow(math.e, (x-math.e))
 
-        steer_angle = function(value_scaled)
+        steer_angle = -function(value_scaled)
         if value < 0:
-            yaw = (steer_angle/scale)*steer_range+1100
+            yaw = 1500-(steer_angle/scale)*steer_range
         elif value > 0:
             yaw = (steer_angle/scale)*steer_range+1500
         if (yaw > 1900):
@@ -315,7 +315,7 @@ def coordinate_rover_control(throttle):
 
 def coordinate_rover_velocities(yaw, throttle):
     yaw = unsigned(int(yaw))
-    throttle = 1556
+    throttle = unsigned(int(throttle))
     msg = OverrideRCIn()
     msg.channels[0] = yaw
     msg.channels[1] = 0
