@@ -47,6 +47,7 @@ rssi_hist = []
 avg_count = 5
 rssi_margin = 5
 rssi_thresh = 15
+vehicle = None
 
 rc_pub = rospy.Publisher('/mavros/rc/override', OverrideRCIn, queue_size=10)
 
@@ -337,13 +338,18 @@ def battery_callback(battery_data):
     if batter_status < .10:
         battery = 0
 
+def get_RSSI():
+    rssi = xbee.get_parameter("DB")
+    rssi = struct.unpack("=B", rssi)
+    return rssi[0]
+    
 def check_time(start_time, wanted_time):
     current_time = time.time()
     if((current_time - start_time) > wanted_time):
         return 1
     return 0
 
-def on_end(vehicle):
+def on_end():
     if xbee is not None and xbee.is_open():
         xbee.close()
         print('Xbee Closed')
@@ -353,6 +359,7 @@ def on_end(vehicle):
 
 def main(vehicle_type, velocity):
     throttle = velocity
+    global vehicle
     vehicle = vehicle_type
 
     rospy.init_node('Search_Run')
@@ -405,7 +412,7 @@ def main(vehicle_type, velocity):
             r.sleep()
     
     else:
-        on_end(vehicle)
+        on_end()
 
     rospy.on_shutdown(on_end)
     
