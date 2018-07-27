@@ -306,6 +306,8 @@ def coordinate_rover_control(throttle):
             yaw = 1900
         elif (yaw < 1100):
             yaw = 1100
+        yaw = int(yaw)
+        throttle = int(throttle)
         coordinate_rover_velocities(yaw, throttle)
 
 def coordinate_rover_velocities(yaw, throttle):
