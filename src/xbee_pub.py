@@ -295,6 +295,10 @@ def coordinate_rover_control(throttle):
         rospy.logerr("Going Straight")
     else:
         value = rssi_rely - current_rssi
+        rospy.loginfo("RSSI Rely")
+        rospy.loginfo(rssi_rely)
+        rospy.loginfo("current_rssi")
+        rospy.loginfo(current_rssi)
         rospy.loginfo("Value")
         rospy.loginfo(value)
         magnitude = abs(value)
@@ -312,8 +316,8 @@ def coordinate_rover_control(throttle):
             yaw = 1900
         elif (yaw < 1100):
             yaw = 1100
-        rospy.loginfo("Yaw")
-        rospy.loginfo(yaw)
+        # rospy.loginfo("Yaw")
+        # rospy.loginfo(yaw)
         coordinate_rover_velocities(yaw, throttle)
 
 def coordinate_rover_velocities(yaw, throttle):
@@ -412,10 +416,10 @@ def main(vehicle_type, velocity):
                 throttle = determine_RSSI(received)
             current_rssi = int(sum(rssi_hist[-5:])/len(rssi_hist[-5:]))
             rospy.Subscriber("/mavros/battery", BatteryStatus, battery_callback)
-            rospy.loginfo("RSSI Val: ")
-            rospy.loginfo(current_rssi)
-            rospy.loginfo("Throttle: ")
-            rospy.loginfo(throttle)
+            # rospy.loginfo("RSSI Val: ")
+            # rospy.loginfo(current_rssi)
+            # rospy.loginfo("Throttle: ")
+            # rospy.loginfo(throttle)
             # if vehicle == 'Copter':
                # coordinate_copter_control()
             if vehicle == 'Rover' and node_id != 'COORDINATOR':
