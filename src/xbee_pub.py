@@ -309,11 +309,13 @@ def coordinate_rover_control(throttle):
             yaw = 1900
         elif (yaw < 1100):
             yaw = 1100
+        rospy.loginfo("Yaw")
+        rospy.loginfo(yaw)
         coordinate_rover_velocities(yaw, throttle)
 
 def coordinate_rover_velocities(yaw, throttle):
     yaw = unsigned(int(yaw))
-    throttle = 1555
+    throttle = 1556
     msg = OverrideRCIn()
     msg.channels[0] = yaw
     msg.channels[1] = 0
