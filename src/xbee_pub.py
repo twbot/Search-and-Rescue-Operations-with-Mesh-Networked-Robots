@@ -298,8 +298,11 @@ def coordinate_rover_control(throttle):
         magnitude = abs(value)
         value_scaled = (magnitude/rssi_thresh)*scale
 
+        # def function(x):
+        #     return math.pow(math.e, (x-math.e))
+
         def function(x):
-            return math.pow(math.e, (x-math.e))
+            return 0.2*math.pow(x, 2)
 
         steer_angle = -function(value_scaled)
         if value < 0:
@@ -339,6 +342,21 @@ def coordinate_copter_velocities(roll, pitch, throttle, yaw):
     msg.channels[6] = 0
     msg.channels[7] = 0
     rc_pub.publish(msg)   
+
+def determined_path(start_time, throttle):
+    time = time.time()
+    yaw = 0
+    if ((sample_time - start_time) > 3) and ((sample_time - start_time) < 4):
+        yaw = 1100
+    if ((sample_time - start_time) > 6) and ((sample_time - start_time) < 7):
+        yaw = 1900
+    if ((sample_time - start_time) > 10) and ((sample_time - start_time) < 11):
+        yaw = 1200
+    if ((sample_time - start_time) > 11) and ((sample_time - start_time) < 11.4):
+        yaw = 1900
+    if ((sample_time - start_time) > 11.5) and ((sample_time - start_time) < 12):
+        yaw = 1500
+    coordinate_rover_velocities(yaw, throttle)
 
 def battery_callback(battery_data):
     #Recieve percentage parameter from ros publisher
