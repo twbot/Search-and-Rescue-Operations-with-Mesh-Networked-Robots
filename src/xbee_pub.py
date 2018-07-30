@@ -361,6 +361,9 @@ def determined_path_rover(start_time, throttle):
 def battery_callback(battery_data):
     #Recieve percentage parameter from ros publisher
     battery_status = battery_data.percentage
+    battery_voltage = battery_data.voltage
+    rospy.loginfo(batter_status)
+    rospy.loginfo(battery_voltage)
     #If battery status below 10%, change battery bool
     if batter_status < .10:
         battery = 0
