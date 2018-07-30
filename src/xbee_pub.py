@@ -306,9 +306,9 @@ def coordinate_rover_control(throttle):
 
         steer_angle = -function(value_scaled)
         if value < 0:
-            yaw = 1500-(steer_angle/scale)*steer_range
+            yaw = 1700-(steer_angle/scale)*steer_range
         elif value > 0:
-            yaw = (steer_angle/scale)*steer_range+1500
+            yaw = (steer_angle/scale)*steer_range+1300
         if (yaw > 1900):
             yaw = 1900
         elif (yaw < 1100):
