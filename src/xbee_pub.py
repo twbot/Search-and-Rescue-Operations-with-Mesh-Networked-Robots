@@ -45,7 +45,7 @@ data = []
 rssi_avg = 0
 rssi_hist = []
 avg_count = 5
-rssi_margin = 3
+rssi_margin = 4
 rssi_thresh = 10
 vehicle = None
 
