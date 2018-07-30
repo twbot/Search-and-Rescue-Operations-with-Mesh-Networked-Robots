@@ -122,7 +122,7 @@ def determine_architecture():
                 count = count + 1
                 sending_node = data.remote_device
                 rssi_det.append(int(data.data.decode()))
-            rssi = int(sum(rssi_det)/len(rssi_det))
+            rssi = float(sum(rssi_det)/len(rssi_det))
             init_rssi_table(sending_node, rssi)
         self_node = {}
         self_node["node"] = str(address)
@@ -203,7 +203,7 @@ def determine_neighbors():
         if node["node"] == address:
             index = rssi_table.index(node)
             global rssi_rely
-            rssi_rely = int(node["rssi"])
+            rssi_rely = float(node["rssi"])
             global rssi_margin_right
             rssi_margin_right = rssi_rely + rssi_margin
             global rssi_margin_left
@@ -294,7 +294,7 @@ def coordinate_rover_control(throttle):
         coordinate_rover_velocities(yaw, throttle)
         rospy.logerr("Going Straight")
     else:
-        value = int(current_rssi) - int(rssi_rely)
+        value = current_rssi - rssi_rely
         magnitude = abs(value)
         value_scaled = (magnitude/rssi_thresh)*scale
 
@@ -306,9 +306,9 @@ def coordinate_rover_control(throttle):
 
         steer_angle = -function(value_scaled)
         if value < 0:
-            yaw = 1700-(steer_angle/scale)*steer_range
+            yaw = 1500-(steer_angle/scale)*steer_range
         elif value > 0:
-            yaw = (steer_angle/scale)*steer_range+1300
+            yaw = (steer_angle/scale)*steer_range+1500
         if (yaw > 1900):
             yaw = 1900
         elif (yaw < 1100):
@@ -430,7 +430,7 @@ def main(vehicle_type, velocity):
             if received:
                 throttle = determine_RSSI(received)
             global current_rssi
-            current_rssi = int(sum(rssi_hist[-5:])/len(rssi_hist[-5:]))
+            current_rssi = float(sum(rssi_hist[-5:])/len(rssi_hist[-5:]))
             rospy.Subscriber("/mavros/battery", BatteryStatus, battery_callback)
             rospy.loginfo("RSSI Val: ")
             rospy.loginfo(current_rssi)
