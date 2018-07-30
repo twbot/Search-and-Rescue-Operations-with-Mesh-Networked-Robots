@@ -343,7 +343,7 @@ def coordinate_copter_velocities(roll, pitch, throttle, yaw):
     msg.channels[7] = 0
     rc_pub.publish(msg)   
 
-def determined_path(start_time, throttle):
+def determined_path_rover(start_time, throttle):
     time = time.time()
     yaw = 0
     if ((sample_time - start_time) > 3) and ((sample_time - start_time) < 4):
@@ -433,10 +433,14 @@ def main(vehicle_type, velocity):
             rospy.loginfo(current_rssi)
             rospy.loginfo("Throttle: ")
             rospy.loginfo(throttle)
-            # if vehicle == 'Copter':
+            # if vehicle == 'Copter' and node_id != 'COORDINATOR':
                # coordinate_copter_control()
+            # if vehicle == 'Copter' and node_id == 'COORDINATOR':
+               # determined_path_copter(mission_start_time, throttle)
             if vehicle == 'Rover' and node_id != 'COORDINATOR':
-               coordinate_rover_control(throttle)
+                coordinate_rover_control(throttle)
+            if vehicle == 'Rover' and node_id == 'COORDINATOR':
+                determined_path_rover(mission_start_time, throttle)
             r.sleep()
     
     else:
