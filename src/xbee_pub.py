@@ -198,7 +198,8 @@ def sort_table_by_rssi():
     rssi_table.sort(key=lambda val: val["rssi"])
 
 def determine_rssi_value():
-    xbee.send_data(node_send,"RSSI_DET")
+    if node_send:
+        xbee.send_data(node_send,"RSSI_DET")
     data = None
     time_pass = 0
     start_time = time.time()
