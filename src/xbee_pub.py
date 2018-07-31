@@ -197,21 +197,47 @@ def convert_bytearr_to_list(bytearr):
 def sort_table_by_rssi():
     rssi_table.sort(key=lambda val: val["rssi"])
 
+def determine_rssi_value():
+    xbee.send_data(node_send,"RSSI_DET")
+    data = None
+    time_pass = 0
+    start_time = time.time()
+    while data == None:
+        packet = xbee.read_data()
+        data = packet
+        time_pass = check_time(start_time, 6)
+        if(time_pass):
+            rospy.logerr('Could not retreive data from node: ')
+            rospy.logerr(node)
+            return 0
+    sending_node = data.remote_device
+    data = data.data.decode()
+    if (sending_node == node_rely.get_64bit_addr()) and (data == 'RSSI_DET'):
+        global rssi_rely
+        rssi_rely = get_RSSI()
+
+    #Update margin-of-error and thresholding values
+    global rssi_margin_right
+    rssi_margin_right = rssi_rely+rssi_margin
+    global rssi_margin_left
+    rssi_margin_left = rssi_rely-rssi_margin
+    global rssi_thresh_right
+    rssi_thresh_right = rssi_rely+rssi_thresh
+    global rssi_thresh_left
+    rssi_thresh_left = rssi_rely-rssi_thresh
+    
+    #Update RSSI history table with current value RSSI
+    count = 0
+    while count < avg_count:
+        rssi_hist.append(rssi_rely)
+        count = count + 1
+    return 1
+
 def determine_neighbors():
     index = 0
     for node in rssi_table:
         if node["node"] == address:
             index = rssi_table.index(node)
-            global rssi_rely
-            rssi_rely = int(node["rssi"])
-            global rssi_margin_right
-            rssi_margin_right = rssi_rely + rssi_margin
-            global rssi_margin_left
-            rssi_margin_left = rssi_rely - rssi_margin
-            global rssi_thresh_left
-            rssi_thresh_left = rssi_rely - rssi_thresh
-            global rssi_thresh_right
-            rssi_thresh_right = rssi_rely + rssi_thresh
     global node_rely
     if index == 0:
         node_rely = None
@@ -228,12 +254,6 @@ def determine_neighbors():
         for node in nodes:
             if node_val["node"] == str(node.get_64bit_addr()):
                 node_send = node
-    #Update RSSI history table with current value RSSI
-    count = 0
-    while count < avg_count:
-        rssi_hist.append(rssi_rely)
-        count = count + 1
-    return 1
     
 def takeoff_copter():
     rospy.wait_for_service('/mavros/cmd/arming')
@@ -244,7 +264,7 @@ def takeoff_copter():
         return 0
     rospy.wait_for_service('/mavros/cmd/takeoff')
     takeoff = rospy.ServiceProxy('/mavros/cmd/takeoff', CommandTOL)
-    response = takeoff(altitude=5, latitude=0, longitude=0, min_pitch=0, yaw=0)
+    response = takeoff(altitude=3, latitude=0, longitude=0, min_pitch=0, yaw=0)
     if not "True" in str(response):
         rospy.logerr('Failed takeoff')
         return 0
@@ -306,9 +326,9 @@ def coordinate_rover_control(throttle):
 
         steer_angle = -function(value_scaled)
         if value < 0:
-            yaw = 1700-(steer_angle/scale)*steer_range
+            yaw = 1500-(steer_angle/scale)*steer_range
         elif value > 0:
-            yaw = (steer_angle/scale)*steer_range+1300
+            yaw = (steer_angle/scale)*steer_range+1500
         if (yaw > 1900):
             yaw = 1900
         elif (yaw < 1100):
@@ -408,6 +428,10 @@ def main(vehicle_type, velocity):
     if init_complete:
         determined_neighbors = determine_neighbors()
 
+    rssi_determined = 0
+    if determined_neighbors:
+        rssi_determined = determine_rssi_value()
+
     print("Node rely: ", node_rely)
     print("Node send: ", node_send)
     
@@ -417,7 +441,7 @@ def main(vehicle_type, velocity):
     #if node_id == 'COORDINATOR' and vehicle == 'Rover':
     #    takeoff_rover()
 
-    if determined_neighbors:
+    if rssi_determined:
         exec_time = 30
         mission_start_time = time.time()
         while (not rospy.is_shutdown()) and (not mission_complete):
