@@ -205,6 +205,7 @@ def determine_rssi_value():
         data = None
         time_pass = 0
         start_time = time.time()
+        rssi_found = 0
         while data == None:
             packet = xbee.read_data()
             data = packet
@@ -213,12 +214,15 @@ def determine_rssi_value():
                 rospy.logerr('Could not retreive data from node: ')
                 rospy.logerr(node)
                 return 0
+        rssi = get_RSSI()
+        rospy.loginfo("Starting RSSI")
+        rospy.loginfo(rssi)
         rospy.loginfo('Data Retrieved')
         sending_node = data.remote_device
         data = data.data.decode()
-        if (sending_node == node_rely.get_64bit_addr()) and (data == 'RSSI_DET'):
+        if (sending_node == node_rely) and (data == 'RSSI_DET'):
             global rssi_rely
-            rssi_rely = get_RSSI()
+            rssi_rely = rssi
 
     #Update margin-of-error and thresholding values
     global rssi_margin_right
