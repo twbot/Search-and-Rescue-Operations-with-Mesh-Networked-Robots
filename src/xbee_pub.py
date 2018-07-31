@@ -200,22 +200,25 @@ def sort_table_by_rssi():
 def determine_rssi_value():
     if node_send:
         xbee.send_data(node_send,"RSSI_DET")
-    data = None
-    time_pass = 0
-    start_time = time.time()
-    while data == None:
-        packet = xbee.read_data()
-        data = packet
-        time_pass = check_time(start_time, 6)
-        if(time_pass):
-            rospy.logerr('Could not retreive data from node: ')
-            rospy.logerr(node)
-            return 0
-    sending_node = data.remote_device
-    data = data.data.decode()
-    if (sending_node == node_rely.get_64bit_addr()) and (data == 'RSSI_DET'):
-        global rssi_rely
-        rssi_rely = get_RSSI()
+    if not node_id == 'COORDINATOR':
+        
+        data = None
+        time_pass = 0
+        start_time = time.time()
+        while data == None:
+            packet = xbee.read_data()
+            data = packet
+            time_pass = check_time(start_time, 6)
+            if(time_pass):
+                rospy.logerr('Could not retreive data from node: ')
+                rospy.logerr(node)
+                return 0
+        rospy.loginfo('Data Retrieved')
+        sending_node = data.remote_device
+        data = data.data.decode()
+        if (sending_node == node_rely.get_64bit_addr()) and (data == 'RSSI_DET'):
+            global rssi_rely
+            rssi_rely = get_RSSI()
 
     #Update margin-of-error and thresholding values
     global rssi_margin_right
