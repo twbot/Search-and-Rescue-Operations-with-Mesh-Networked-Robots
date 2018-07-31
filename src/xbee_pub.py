@@ -201,7 +201,7 @@ def determine_rssi_value():
     if node_send:
         xbee.send_data(node_send,"RSSI_DET")
     if not node_id == 'COORDINATOR':
-        
+
         data = None
         time_pass = 0
         start_time = time.time()
@@ -258,7 +258,7 @@ def determine_neighbors():
         for node in nodes:
             if node_val["node"] == str(node.get_64bit_addr()):
                 node_send = node
-    
+    return 1
 def takeoff_copter():
     rospy.wait_for_service('/mavros/cmd/arming')
     arming = rospy.ServiceProxy('/mavros/cmd/arming', CommandBool)
