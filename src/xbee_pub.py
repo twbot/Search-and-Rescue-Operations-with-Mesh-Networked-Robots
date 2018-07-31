@@ -122,7 +122,7 @@ def determine_architecture():
                 count = count + 1
                 sending_node = data.remote_device
                 rssi_det.append(int(data.data.decode()))
-            rssi = int(sum(rssi_det)/len(rssi_det))
+            rssi = float(sum(rssi_det)/len(rssi_det))
             init_rssi_table(sending_node, rssi)
         self_node = {}
         self_node["node"] = str(address)
@@ -314,7 +314,7 @@ def coordinate_rover_control(throttle):
         coordinate_rover_velocities(yaw, throttle)
         rospy.logerr("Going Straight")
     else:
-        value = int(current_rssi) - int(rssi_rely)
+        value = current_rssi - rssi_rely
         magnitude = abs(value)
         value_scaled = (magnitude/rssi_thresh)*scale
 
@@ -381,6 +381,9 @@ def determined_path_rover(start_time, throttle):
 def battery_callback(battery_data):
     #Recieve percentage parameter from ros publisher
     battery_status = battery_data.percentage
+    battery_voltage = battery_data.voltage
+    rospy.loginfo(batter_status)
+    rospy.loginfo(battery_voltage)
     #If battery status below 10%, change battery bool
     if batter_status < .10:
         battery = 0
@@ -451,7 +454,7 @@ def main(vehicle_type, velocity):
             if received:
                 throttle = determine_RSSI(received)
             global current_rssi
-            current_rssi = int(sum(rssi_hist[-5:])/len(rssi_hist[-5:]))
+            current_rssi = float(sum(rssi_hist[-5:])/len(rssi_hist[-5:]))
             rospy.Subscriber("/mavros/battery", BatteryStatus, battery_callback)
             rospy.loginfo("RSSI Val: ")
             rospy.loginfo(current_rssi)
