@@ -1,15 +1,11 @@
 # Search and Rescue Operations :: Mesh Networked Robotics
 
-![Grid Image][image1]
+![Overview][image1]
 
 [//]: # (References)
 
-[image1]: ./calibration_images/example_grid1.jpg
-[image2]: ./calibration_images/angle_example.jpg
-[image3]: ./calibration_images/transform_ex.png
-[image4]: ./calibration_images/thresholding.png
-[image5]: ./calibration_images/coordinate.png
-[gif1]: ./output/giphy.gif
+[image1]: ./extra/Overall.JPG
+[image2]: ./extra/Algorithm_Overview.png
 
 ---
 
