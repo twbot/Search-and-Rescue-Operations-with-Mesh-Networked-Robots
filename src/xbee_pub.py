@@ -45,7 +45,7 @@ data = []
 rssi_avg = 0
 rssi_hist = []
 avg_count = 5
-rssi_margin = 4
+rssi_margin = 2
 rssi_thresh = 10
 vehicle = None
 
@@ -326,17 +326,15 @@ def coordinate_rover_control(throttle):
         magnitude = abs(value)
         value_scaled = (magnitude/rssi_thresh)*scale
 
-        # def function(x):
-        #     return math.pow(math.e, (x-math.e))
-
         def function(x):
-            return 0.2*math.pow(x, 2)
+            return 0.5*math.pow(x, 2)
 
-        steer_angle = -function(value_scaled)
+        steer_angle = 0
         if value < 0:
-            yaw = 1500-(steer_angle/scale)*steer_range
+            steer_angle = function(value_scaled)
         elif value > 0:
-            yaw = (steer_angle/scale)*steer_range+1500
+            steer_angle = -function(value_scaled)
+        yaw = 1500+(steer_angle/scale)*steer_range
         if (yaw > 1900):
             yaw = 1900
         elif (yaw < 1100):
@@ -462,7 +460,7 @@ def main(vehicle_type, velocity):
             if received:
                 throttle = determine_RSSI(received)
             global current_rssi
-            current_rssi = float(sum(rssi_hist[-5:])/len(rssi_hist[-5:]))
+            current_rssi = float(sum(rssi_hist[-4:])/len(rssi_hist[-4:]))
             rospy.Subscriber("/mavros/battery", BatteryStatus, battery_callback)
             rospy.loginfo("RSSI Val: ")
             rospy.loginfo(current_rssi)
