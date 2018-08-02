@@ -458,10 +458,10 @@ def main(vehicle_type, velocity):
         mission_start_time = time.time()
         while (not rospy.is_shutdown()) and (not mission_complete):
             mission_complete = check_time(mission_start_time, exec_time)
+            global throttle
             send_ack(throttle)
             received = xbee.read_data()
             if received:
-                global throttle
                 throttle = determine_RSSI(received)
             global current_rssi
             current_rssi = float(sum(rssi_hist[-4:])/len(rssi_hist[-4:]))
