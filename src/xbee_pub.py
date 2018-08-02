@@ -415,6 +415,7 @@ def on_end():
     # if vehicle == 'Copter':
         # land_copter()
     print(rssi_hist)
+    print(packets_sent)
 
 def main(vehicle_type, velocity):
     throttle = velocity
