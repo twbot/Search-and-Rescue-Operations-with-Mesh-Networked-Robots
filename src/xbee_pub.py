@@ -330,7 +330,7 @@ def coordinate_rover_control(throttle):
         value_scaled = (magnitude/rssi_thresh)*scale
 
         def function(x):
-            return 0.5*math.pow(x, 2)
+            return 0.34*math.pow(x, 2)
 
         steer_angle = 0
         if value < 0:
