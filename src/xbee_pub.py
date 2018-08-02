@@ -48,6 +48,7 @@ avg_count = 5
 rssi_margin = 2
 rssi_thresh = 10
 vehicle = None
+packets_sent = 0
 
 rc_pub = rospy.Publisher('/mavros/rc/override', OverrideRCIn, queue_size=10)
 
@@ -305,6 +306,8 @@ def determine_RSSI(received):
 def send_ack(throttle):
     if node_send:
         xbee.send_data_async(node_send, throttle)
+        global packets_sent
+        packets_sent = packets_sent + 1
 
 def coordinate_copter_control():
     # coordinate_copter_velocities()
@@ -446,9 +449,6 @@ def main(vehicle_type, velocity):
     
     # if node_id == 'COORDINATOR' and vehicle == 'Copter':
        # takeoff_copter()
-    
-    #if node_id == 'COORDINATOR' and vehicle == 'Rover':
-    #    takeoff_rover()
 
     if rssi_determined:
         exec_time = 30
