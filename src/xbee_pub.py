@@ -44,6 +44,7 @@ current_rssi = 0
 data = []
 rssi_avg = 0
 rssi_hist = []
+turning_hist = []
 avg_count = 5
 rssi_margin = 2
 rssi_thresh = 10
@@ -346,6 +347,7 @@ def coordinate_rover_control(throttle):
             yaw = 1900
         elif (yaw < 1100):
             yaw = 1100
+        turning_hist.append(yaw)
         rospy.loginfo("Yaw")
         rospy.loginfo(yaw)
         coordinate_rover_velocities(yaw, throttle)
