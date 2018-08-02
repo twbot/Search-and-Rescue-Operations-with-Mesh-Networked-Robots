@@ -49,6 +49,7 @@ rssi_margin = 2
 rssi_thresh = 10
 vehicle = None
 packets_sent = 0
+throttle = 0;
 
 rc_pub = rospy.Publisher('/mavros/rc/override', OverrideRCIn, queue_size=10)
 
@@ -318,7 +319,7 @@ def unsigned(n):
 
 def coordinate_rover_control(throttle):
     yaw = 1500
-    scale = 5
+    scale = 7
     steer_range = 400
 
     if current_rssi < rssi_margin_right and current_rssi > rssi_margin_left:
@@ -418,6 +419,7 @@ def on_end():
     print(packets_sent)
 
 def main(vehicle_type, velocity):
+    global throttle
     throttle = velocity
     global vehicle
     vehicle = vehicle_type
@@ -459,6 +461,7 @@ def main(vehicle_type, velocity):
             send_ack(throttle)
             received = xbee.read_data()
             if received:
+                global throttle
                 throttle = determine_RSSI(received)
             global current_rssi
             current_rssi = float(sum(rssi_hist[-4:])/len(rssi_hist[-4:]))
