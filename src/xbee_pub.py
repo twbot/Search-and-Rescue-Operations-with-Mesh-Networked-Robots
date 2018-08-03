@@ -437,6 +437,7 @@ def on_end():
     #     send_data_to_file(data)
     # print(rssi_hist)
     # print(turning_hist)
+    print(data_hist)
 
 def main(vehicle_type, velocity, data_send):
     global throttle
