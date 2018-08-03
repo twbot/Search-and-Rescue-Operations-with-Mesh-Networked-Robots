@@ -350,7 +350,7 @@ def coordinate_rover_control(throttle):
             yaw = 1900
         elif (yaw < 1100):
             yaw = 1100
-        turning_hist.append(yaw)
+        turning_hist.append(unsigned(int(yaw)))
         rospy.loginfo("Yaw")
         rospy.loginfo(yaw)
         coordinate_rover_velocities(yaw, throttle)
