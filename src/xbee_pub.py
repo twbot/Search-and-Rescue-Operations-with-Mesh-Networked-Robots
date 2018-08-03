@@ -435,7 +435,7 @@ def on_end():
     # if data_send:
     #     data = rssi_hist + turning_hist
     #     send_data_to_file(data)
-    # print(rssi_hist)
+    print(rssi_hist)
     # print(turning_hist)
     print(data_hist)
 
