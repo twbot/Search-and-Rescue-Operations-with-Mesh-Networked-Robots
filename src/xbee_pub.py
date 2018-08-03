@@ -358,7 +358,8 @@ def coordinate_rover_control(throttle):
 
 def coordinate_rover_velocities(yaw, throttle):
     yaw = unsigned(int(yaw))
-    data_hist.append(tuple(yaw, current_rssi))
+    value = (yaw, current_rssi)
+    data_hist.append(value)
     throttle = unsigned(int(throttle))
     msg = OverrideRCIn()
     msg.channels[0] = yaw
