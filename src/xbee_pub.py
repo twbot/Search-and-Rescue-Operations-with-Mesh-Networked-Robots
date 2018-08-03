@@ -423,15 +423,15 @@ def send_data_to_file(data):
     # data_file = pd.DataFrame(data)
     # data_file = data_file.to_csv(file, index=False, header=False)
 
-def on_end(data_send):
+def on_end():
     if xbee is not None and xbee.is_open():
         xbee.close()
         print('Xbee Closed')
     # if vehicle == 'Copter':
         # land_copter()
-    if data_send:
-        data = rssi_hist + turning_hist
-        send_data_to_file(data)
+    # if data_send:
+    #     data = rssi_hist + turning_hist
+    #     send_data_to_file(data)
     print(rssi_hist)
     print(turning_hist)
 
@@ -498,9 +498,9 @@ def main(vehicle_type, velocity, data_send):
             r.sleep()
     
     else:
-        on_end(data_send)
+        on_end()
 
-    rospy.on_shutdown(on_end(data_send))
+    rospy.on_shutdown(on_end)
     
 if __name__ == '__main__':
 
