@@ -10,7 +10,8 @@ import struct
 import re
 import argparse
 import math
-import pandas as pd
+import csv
+import os
 
 from mavros_msgs.msg import OverrideRCIn, BatteryStatus
 from mavros_msgs.srv import SetMode, CommandBool, CommandTOL
@@ -419,6 +420,7 @@ def check_time(start_time, wanted_time):
 def send_data_to_file(data):
     directory = os.getcwd()
     file = os.path.join(directory, 'turn_radius.csv')
+    with open(file, 'w') as 
     data_file = pd.DataFrame(data)
     data_file = data_file.to_csv(file, index=False, header=False)
 
@@ -429,8 +431,10 @@ def on_end(data_send):
     # if vehicle == 'Copter':
         # land_copter()
     if data_send:
-        data = rssi_hist + packets_sent
+        data = rssi_hist + turning_hist
         send_data_to_file(data)
+    print(rssi_hist)
+    print(turning_hist)
 
 def main(vehicle_type, velocity, data_send):
     global throttle
