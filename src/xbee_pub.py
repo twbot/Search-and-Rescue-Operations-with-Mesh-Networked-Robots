@@ -47,6 +47,7 @@ data = []
 rssi_avg = 0
 rssi_hist = []
 turning_hist = []
+data_hist = []
 avg_count = 5
 rssi_margin = 2
 rssi_thresh = 10
@@ -357,6 +358,8 @@ def coordinate_rover_control(throttle):
 
 def coordinate_rover_velocities(yaw, throttle):
     yaw = unsigned(int(yaw))
+    value = (yaw, current_rssi)
+    data_hist.append(value)
     throttle = unsigned(int(throttle))
     msg = OverrideRCIn()
     msg.channels[0] = yaw
@@ -433,7 +436,8 @@ def on_end():
     #     data = rssi_hist + turning_hist
     #     send_data_to_file(data)
     print(rssi_hist)
-    print(turning_hist)
+    # print(turning_hist)
+    print(data_hist)
 
 def main(vehicle_type, velocity, data_send):
     global throttle
