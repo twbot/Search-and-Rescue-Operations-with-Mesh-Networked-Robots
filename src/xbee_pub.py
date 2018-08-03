@@ -10,6 +10,7 @@ import struct
 import re
 import argparse
 import math
+import pandas as pd
 
 from mavros_msgs.msg import OverrideRCIn, BatteryStatus
 from mavros_msgs.srv import SetMode, CommandBool, CommandTOL
@@ -266,6 +267,7 @@ def determine_neighbors():
             if node_val["node"] == str(node.get_64bit_addr()):
                 node_send = node
     return 1
+
 def takeoff_copter():
     rospy.wait_for_service('/mavros/cmd/arming')
     arming = rospy.ServiceProxy('/mavros/cmd/arming', CommandBool)
@@ -414,16 +416,23 @@ def check_time(start_time, wanted_time):
         return 1
     return 0
 
-def on_end():
+def send_data_to_file(data):
+    directory = os.getcwd()
+    file = os.path.join(directory, 'turn_radius.csv')
+    data_file = pd.DataFrame(data)
+    data_file = data_file.to_csv(file, index=False, header=False)
+
+def on_end(data_send):
     if xbee is not None and xbee.is_open():
         xbee.close()
         print('Xbee Closed')
     # if vehicle == 'Copter':
         # land_copter()
-    print(rssi_hist)
-    print(packets_sent)
+    if data_send:
+        data = rssi_hist + packets_sent
+        send_data_to_file(data)
 
-def main(vehicle_type, velocity):
+def main(vehicle_type, velocity, data_send):
     global throttle
     throttle = velocity
     global vehicle
@@ -486,16 +495,17 @@ def main(vehicle_type, velocity):
             r.sleep()
     
     else:
-        on_end()
+        on_end(data_send)
 
-    rospy.on_shutdown(on_end)
+    rospy.on_shutdown(on_end(data_send))
     
 if __name__ == '__main__':
 
     # Parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('vehicle_type', help='Type of Vehicle: Copter or Rover', choices=['Rover', 'Copter'],  default='Rover')
-    parser.add_argument('init_velocity', help='Initial velocity of vehicles', default=1555)
+    parser.add_argument('init_velocity', help='Initial velocity of vehicles', nargs='?', default=1556)
+    parser.add_argument('data_send', help='Send data to csv file', nargs='?', default=False)
     args = parser.parse_args()
 
     response = None
@@ -512,7 +522,7 @@ if __name__ == '__main__':
     
     if "True" in str(response):
         try:
-            main(args.vehicle_type, args.init_velocity)
+            main(args.vehicle_type, args.init_velocity, args.data_send)
         except rospy.ROSInterruptException:
             rospy.logerr("Problem changing operating mode")
             pass
