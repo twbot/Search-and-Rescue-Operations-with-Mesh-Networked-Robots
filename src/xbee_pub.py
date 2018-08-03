@@ -420,9 +420,8 @@ def check_time(start_time, wanted_time):
 def send_data_to_file(data):
     directory = os.getcwd()
     file = os.path.join(directory, 'turn_radius.csv')
-    with open(file, 'w') as 
-    data_file = pd.DataFrame(data)
-    data_file = data_file.to_csv(file, index=False, header=False)
+    # data_file = pd.DataFrame(data)
+    # data_file = data_file.to_csv(file, index=False, header=False)
 
 def on_end(data_send):
     if xbee is not None and xbee.is_open():
