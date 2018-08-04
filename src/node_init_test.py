@@ -130,9 +130,9 @@ def check_time(start_time, wanted_time):
     return 0
 
 def send_packet():
-    if node_id == 'COORDINATOR':
-        for node in nodes:
-            xbee.send_data_async(node, 'ACK')
+    for node in nodes:
+        xbee.send_data_async(node, 'ACK')
+        print('data sent')
 
 def append_data():
     if not node_id=='COORDINATOR':
@@ -140,6 +140,7 @@ def append_data():
         curr_time = time.time()
         value = (rssi, curr_time)
         data_hist.append(value)
+        print('data appended')
 
 def main():
 
@@ -154,10 +155,12 @@ def main():
 
         while (not mission_complete):
             mission_complete = check_time(mission_start_time, exec_time)
-            send_packet()
-            received = xbee.read_data()
-            if received:
-                append_data()
+            if node_id == 'COORDINATOR':
+                send_packet()
+            if not node_id == 'COORDINATOR':
+                received = xbee.read_data()
+                if received:
+                    append_data()
     else:
         pass
 
