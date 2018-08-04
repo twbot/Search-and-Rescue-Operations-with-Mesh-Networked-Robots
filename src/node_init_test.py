@@ -143,7 +143,6 @@ def main():
 
     net_instantiated = instantiate_zigbee_network()
     'Net Instantiated' if net_instantiated else 'Net failed to instantiated'
-    'Architecture Instantiated' if arch_instantiated else 'Architecture failed to instantiate'
 
     exec_time = 30
     mission_start_time = time.time()
