@@ -282,6 +282,12 @@ def on_end():
     # print(rssi_hist)
     # print(data_hist)
 
+def check_time(start_time, wanted_time):
+    current_time = time.time()
+    if((current_time - start_time) > wanted_time):
+        return 1
+    return 0
+    
 def main():
 
     rospy.init_node('Search_Run')
