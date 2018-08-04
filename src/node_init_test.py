@@ -130,29 +130,36 @@ def check_time(start_time, wanted_time):
     return 0
 
 def send_packet():
-    for node in nodes:
-        xbee.send_data_async(node, 'ACK')
+    if node_id == 'COORDINATOR':
+        for node in nodes:
+            xbee.send_data_async(node, 'ACK')
 
 def append_data():
-    rssi = get_RSSI()
-    curr_time = time.time()
-    value = (rssi, curr_time)
-    data_hist.append(value)
+    if not node_id=='COORDINATOR':
+        rssi = get_RSSI()
+        curr_time = time.time()
+        value = (rssi, curr_time)
+        data_hist.append(value)
 
 def main():
 
     net_instantiated = instantiate_zigbee_network()
     'Net Instantiated' if net_instantiated else 'Net failed to instantiated'
 
-    exec_time = 30
-    mission_start_time = time.time()
-    mission_complete = 0
-    print('Time Start: ', mission_start_time)
+    if net_instantiated:
+        exec_time = 30
+        mission_start_time = time.time()
+        mission_complete = 0
+        print('Time Start: ', mission_start_time)
 
-    while (not mission_complete) and net_instantiated:
-        mission_complete = check_time(mission_start_time, exec_time)
-        send_packet()
-        append_data()
+        while (not mission_complete):
+            mission_complete = check_time(mission_start_time, exec_time)
+            send_packet()
+            received = xbee.read_data()
+            if received:
+                append_data()
+    else:
+        pass
 
     on_end()
     
