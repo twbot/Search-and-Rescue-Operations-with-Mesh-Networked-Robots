@@ -33,27 +33,8 @@ hierarchy = 0
 node_id = ''
 address = ''
 received_packet = None
-battery = 1
 nodes = []
-node_rely = None
-node_send = None
-rssi_rely = 0
-rssi_margin_left = 0
-rssi_margin_right = 0
-rssi_thresh_right = 0
-rssi_thresh_left = 0
-current_rssi = 0
-data = []
-rssi_avg = 0
-rssi_hist = []
-turning_hist = []
 data_hist = []
-avg_count = 5
-rssi_margin = 2
-rssi_thresh = 10
-vehicle = None
-packets_sent = 0
-throttle = 0;
 
 rc_pub = rospy.Publisher('/mavros/rc/override', OverrideRCIn, queue_size=10)
 
@@ -90,7 +71,6 @@ def instantiate_zigbee_network():
         global nodes
         nodes = xnet.get_devices()
         data = 'Zigbee node %s sending data' % (xbee.get_node_id())
-
         return 1
 
     except ConnectionException:
@@ -106,77 +86,9 @@ def instantiate_zigbee_network():
         xbee.close()
         return 0
 
-def determine_architecture():
-    if(node_id == 'COORDINATOR'):
-        for node in nodes:
-            count = 0
-            sending_node = None
-            rssi_det = []
-            while count < avg_count:
-                xbee.send_data(node,"DATREQ")
-                data = None
-                time_pass = 0
-                start_time = time.time()
-                while data == None:
-                    packet = xbee.read_data()
-                    data = packet
-                    time_pass = check_time(start_time, 6)
-                    if(time_pass):
-                        rospy.logerr('Could not retreive data from node: ')
-                        rospy.logerr(node)
-                        return 0
-                count = count + 1
-                sending_node = data.remote_device
-                rssi_det.append(int(data.data.decode()))
-            rssi = float(sum(rssi_det)/len(rssi_det))
-            init_rssi_table(sending_node, rssi)
-        self_node = {}
-        self_node["node"] = str(address)
-        self_node["rssi"] = 0
-        rssi_table.append(self_node)
-        sort_table_by_rssi()
-    else:
-        count = 0
-        while count < avg_count:
-            data = None
-            while data == None:
-                packet = xbee.read_data()
-                data = packet
-            val = data.data.decode()
-            sending_node = data.remote_device
-            if val == 'DATREQ':
-                rssi = get_RSSI()
-                string = str(rssi).encode()
-                xbee.send_data(sending_node, string)
-            count = count + 1
-    return 1
-
 def define_node(node):
     node = re.findall(r'[\w\d]+', str(node))
     return node[0]
-
-def send_rssi_table():
-    if(node_id == 'COORDINATOR'):
-        for node in nodes:
-            receive_ack = None
-            time_pass = 0
-            table = convert_list_to_bytearr()
-            xbee.send_data(node, table)
-    else:
-        data = None
-        while data == None:
-            packet = xbee.read_data()
-            data = packet
-        val = data.data
-        convert_bytearr_to_list(val)
-    return 1
-
-def init_rssi_table(node_sent, rssi):
-    sending_node = define_node(node_sent)
-    node = {}
-    node["node"] = str(sending_node)
-    node["rssi"] = rssi
-    rssi_table.append(node)
 
 def convert_list_to_bytearr():
     encoded_val = []
@@ -200,76 +112,6 @@ def convert_bytearr_to_list(bytearr):
         node["rssi"] = data[1]
         rssi_table.append(node)
 
-def sort_table_by_rssi():
-    rssi_table.sort(key=lambda val: val["rssi"])
-
-def determine_rssi_value():
-    if node_send:
-        xbee.send_data(node_send,"RSSI_DET")
-    if not node_id == 'COORDINATOR':
-
-        data = None
-        time_pass = 0
-        start_time = time.time()
-        rssi_found = 0
-        while data == None:
-            packet = xbee.read_data()
-            data = packet
-            time_pass = check_time(start_time, 6)
-            if(time_pass):
-                rospy.logerr('Could not retreive data from node: ')
-                rospy.logerr(node)
-                return 0
-        rssi = get_RSSI()
-        rospy.loginfo("Starting RSSI")
-        rospy.loginfo(rssi)
-        rospy.loginfo('Data Retrieved')
-        sending_node = data.remote_device
-        data = data.data.decode()
-        if (sending_node == node_rely) and (data == 'RSSI_DET'):
-            global rssi_rely
-            rssi_rely = rssi
-
-    #Update margin-of-error and thresholding values
-    global rssi_margin_right
-    rssi_margin_right = rssi_rely+rssi_margin
-    global rssi_margin_left
-    rssi_margin_left = rssi_rely-rssi_margin
-    global rssi_thresh_right
-    rssi_thresh_right = rssi_rely+rssi_thresh
-    global rssi_thresh_left
-    rssi_thresh_left = rssi_rely-rssi_thresh
-    
-    #Update RSSI history table with current value RSSI
-    count = 0
-    while count < avg_count:
-        rssi_hist.append(rssi_rely)
-        count = count + 1
-    return 1
-
-def determine_neighbors():
-    index = 0
-    for node in rssi_table:
-        if node["node"] == address:
-            index = rssi_table.index(node)
-    global node_rely
-    if index == 0:
-        node_rely = None
-    else:
-        node_val = rssi_table[index-1]
-        for node in nodes:
-            if node_val["node"] == str(node.get_64bit_addr()):
-                node_rely = node
-    global node_send
-    if index == (len(rssi_table)-1):
-        node_send = None
-    else:
-        node_val = rssi_table[index+1]
-        for node in nodes:
-            if node_val["node"] == str(node.get_64bit_addr()):
-                node_send = node
-    return 1
-
 def get_RSSI():
     rssi = xbee.get_parameter("DB")
     rssi = struct.unpack("=B", rssi)
@@ -279,42 +121,40 @@ def on_end():
     if xbee is not None and xbee.is_open():
         xbee.close()
         print('Xbee Closed')
-    # print(rssi_hist)
-    # print(data_hist)
+    print(data_hist)
 
 def check_time(start_time, wanted_time):
     current_time = time.time()
     if((current_time - start_time) > wanted_time):
         return 1
     return 0
-    
-def main():
 
-    rospy.init_node('Search_Run')
-    r = rospy.Rate(30)
+def send_packet():
+    for node in nodes:
+        xbee.send_data_async(node, 'ACK')
+
+def append_data():
+    rssi = get_RSSI()
+    curr_time = time.time()
+    value = (rssi, curr_time)
+    data_hist.append(value)
+
+def main():
     mission_complete = 0
 
     net_instantiated = instantiate_zigbee_network()
     arch_instantiated = determine_architecture()
     'Net Instantiated' if net_instantiated else 'Net failed to instantiated'
     'Architecture Instantiated' if arch_instantiated else 'Architecture failed to instantiate'
-    init_complete = 0
-    if arch_instantiated and net_instantiated:
-        init_complete = send_rssi_table()
-    
-    for x in rssi_table:
-        print(x["node"], " : ", x["rssi"])
-    
-    determined_neighbors = 0
-    if init_complete:
-        determined_neighbors = determine_neighbors()
 
-    rssi_determined = 0
-    if determined_neighbors:
-        rssi_determined = determine_rssi_value()
-
-    print("Node rely: ", node_rely)
-    print("Node send: ", node_send)
+    exec_time = 30
+    mission_start_time = time.time()
+    mission_complete = 0
+    print('Time Start: ', mission_start_time)
+    while (not mission_complete):
+        mission_complete = check_time(mission_start_time, exec_time)
+        send_packet()
+        append_data()
 
     on_end()
     
