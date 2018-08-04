@@ -54,7 +54,6 @@ rssi_thresh = 10
 vehicle = None
 packets_sent = 0
 throttle = 0;
-data_
 
 rc_pub = rospy.Publisher('/mavros/rc/override', OverrideRCIn, queue_size=10)
 
