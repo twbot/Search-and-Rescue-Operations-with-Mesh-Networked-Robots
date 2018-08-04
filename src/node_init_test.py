@@ -279,8 +279,8 @@ def on_end():
     if xbee is not None and xbee.is_open():
         xbee.close()
         print('Xbee Closed')
-    print(rssi_hist)
-    print(data_hist)
+    # print(rssi_hist)
+    # print(data_hist)
 
 def main():
 
