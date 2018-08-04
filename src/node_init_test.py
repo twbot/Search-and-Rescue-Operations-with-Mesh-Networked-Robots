@@ -476,7 +476,7 @@ def main(vehicle_type, velocity, data_send):
        # takeoff_copter()
 
     if rssi_determined:
-        exec_time = 30
+        exec_time = 10
         mission_start_time = time.time()
         while (not rospy.is_shutdown()) and (not mission_complete):
             mission_complete = check_time(mission_start_time, exec_time)
