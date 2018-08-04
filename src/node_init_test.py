@@ -140,10 +140,8 @@ def append_data():
     data_hist.append(value)
 
 def main():
-    mission_complete = 0
 
     net_instantiated = instantiate_zigbee_network()
-    arch_instantiated = determine_architecture()
     'Net Instantiated' if net_instantiated else 'Net failed to instantiated'
     'Architecture Instantiated' if arch_instantiated else 'Architecture failed to instantiate'
 
@@ -151,7 +149,8 @@ def main():
     mission_start_time = time.time()
     mission_complete = 0
     print('Time Start: ', mission_start_time)
-    while (not mission_complete):
+
+    while (not mission_complete) and net_instantiated:
         mission_complete = check_time(mission_start_time, exec_time)
         send_packet()
         append_data()
