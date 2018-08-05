@@ -387,16 +387,26 @@ def coordinate_copter_velocities(roll, pitch, throttle, yaw):
 def determined_path_rover(start_time, throttle):
     sample_time = time.time()
     yaw = 0
-    if ((sample_time - start_time) > 3) and ((sample_time - start_time) < 4):
-        yaw = 1100
-    if ((sample_time - start_time) > 6) and ((sample_time - start_time) < 7):
-        yaw = 1900
-    if ((sample_time - start_time) > 10) and ((sample_time - start_time) < 11):
-        yaw = 1200
-    if ((sample_time - start_time) > 11) and ((sample_time - start_time) < 11.4):
-        yaw = 1900
-    if ((sample_time - start_time) > 11.5) and ((sample_time - start_time) < 12):
+    if ((sample_time - start_time) > 5) and ((sample_time - start_time) < 5.5):
+        yaw = 1300
+    if ((sample_time - start_time) > 8) and ((sample_time - start_time) < 9):
+        yaw = 1700
+    if ((sample_time - start_time) > 12) and ((sample_time - start_time) < 13):
+        yaw = 1300
+    if ((sample_time - start_time) > 13) and ((sample_time - start_time) < 13.9):
         yaw = 1500
+    if ((sample_time - start_time) > 15) and ((sample_time - start_time) < 16):
+        yaw = 1500
+    # if ((sample_time - start_time) > 16.4) and ((sample_time - start_time) < 16.7):
+    #     yaw = 1350
+    # if ((sample_time - start_time) > 16.7) and ((sample_time - start_time) < 17.4):
+    #     yaw = 1750
+    # if ((sample_time - start_time) > 17.5) and ((sample_time - start_time) < 18):
+    #     yaw = 1350
+    # if ((sample_time - start_time) > 18) and ((sample_time - start_time) < 19):
+    #     yaw = 1500
+    # if ((sample_time - start_time) > 15) and ((sample_time - start_time) < 16):
+    #     yaw = 1500
     coordinate_rover_velocities(yaw, throttle)
 
 def battery_callback(battery_data):
@@ -511,7 +521,7 @@ if __name__ == '__main__':
     # Parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('vehicle_type', help='Type of Vehicle: Copter or Rover', choices=['Rover', 'Copter'],  default='Rover')
-    parser.add_argument('init_velocity', help='Initial velocity of vehicles', nargs='?', default=1556)
+    parser.add_argument('init_velocity', help='Initial velocity of vehicles', nargs='?', default=1650)
     parser.add_argument('data_send', help='Send data to csv file', nargs='?', default=False)
     args = parser.parse_args()
 
