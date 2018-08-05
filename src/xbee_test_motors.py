@@ -24,6 +24,8 @@ from digi.xbee.util import utils
 from digi.xbee.io import IOLine, IOMode
 
 
+rc_pub = rospy.Publisher('/mavros/rc/override', OverrideRCIn, queue_size=10)
+
 def coordinate_rover_velocities(yaw, throttle):
     yaw = unsigned(int(yaw))
     value = (yaw, current_rssi)
