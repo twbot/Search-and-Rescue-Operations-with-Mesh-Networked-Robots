@@ -54,18 +54,22 @@ def main():
 	for rssi_val in rssi_add_data:
 		# NewValue = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin
 		value = (((rssi_val[0] - 1900) * 90) / -800) -45
-		plt.scatter(rssi_val[1], value, marker='+', color='b')
+		plt.scatter(rssi_val[1], value, marker='+', color='k')
 	# cm.coolwarm(0.5)
-	for rssi_val in rssi_data_offic:
+	data_index = 0
+	for rssi_val in rssi_data_offic[1:]:
+		old_value = (((rssi_data_offic[data_index][0] - 1900) * 90) / -800) -45
 		value = (((rssi_val[0] - 1900) * 90) / -800) -45
-		plt.scatter(rssi_val[1], value, marker='o', color='r')
-	plt.axvline(rssi_add_data[0][1], color='b',linestyle='solid', label='Starting RSSI (23)')
-	plt.axvline(rssi_add_data[0][1]+1.9, linestyle='dashed', color='b', label='Threshold RSSI (23)')
-	plt.axvline(rssi_add_data[0][1]-1.9, linestyle='dashed', color='b')
+		plt.scatter(rssi_val[1], value, marker='o', color='k')
+		data_index = data_index +1
 
-	plt.axvline(rssi_data_offic[0][1], color='r',linestyle='dotted', label='Starting RSSI (27)')
-	plt.axvline(rssi_data_offic[0][1]+1.9, linestyle='dashdot', color='r', label='Threshold RSSI (27)')
-	plt.axvline(rssi_data_offic[0][1]-1.9, linestyle='dashdot', color='r')
+	plt.axvline(rssi_add_data[0][1], color='k',linestyle='solid', label='Starting RSSI (23)')
+	plt.axvline(rssi_add_data[0][1]+1.9, linestyle='dashed', color='k', label='Threshold RSSI (23)')
+	plt.axvline(rssi_add_data[0][1]-1.9, linestyle='dashed', color='k')
+
+	plt.axvline(rssi_data_offic[0][1], color='k',linestyle='dotted', label='Starting RSSI (27)')
+	plt.axvline(rssi_data_offic[0][1]+1.9, linestyle='dashdot', color='k', label='Threshold RSSI (27)')
+	plt.axvline(rssi_data_offic[0][1]-1.9, linestyle='dashdot', color='k')
 	plt.yticks(np.arange(-45, 47, step=15))
 	plt.legend()
 	plt.show()
