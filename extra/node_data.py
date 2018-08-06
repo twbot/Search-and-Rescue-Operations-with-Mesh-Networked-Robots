@@ -14,14 +14,15 @@ filtered_data = []
 list_vals = [values_test_1[1]]*10
 values_test_2 = list_vals+values_test_1
 
-def connectpoints(x,y,p1,p2, color):
+def connectpoints(x,y,p1,p2, color, linetype, labelname=None):
     x1, x2 = x, p1
     y1, y2 = y, p2
-    plt.plot([x1,x2],[y1,y2],color)
+    if labelname:
+    	plt.plot([x1,x2],[y1,y2],color, linestyle=linetype, label=labelname)
+    else:
+    	plt.plot([x1,x2],[y1,y2],color, linestyle=linetype)
 
 def gauss():
-	# for val in values_test_2:
-	# 	print(val[1]-start_time)
 	last_vals = values_test_2[:10]
 	gauss_vals = []
 	def function(x, var, mu):
@@ -38,39 +39,22 @@ def gauss():
 	for val in values_test_2:
 		avg = sum(last_vals[-10:][0])/10
 		variance = variance_func(last_vals[-10:], avg)
-		# print(type(last_vals[-4:]))
-		# print(last_vals[-4:])
 		value = function(val[0], variance, avg)
 		if index == 0:
-			value_list = [value]*15
+			value_list = [value]*10
 			gauss_vals = gauss_vals + value_list
 		gauss_vals.append(value)
-		avg_gauss_vals = sum(gauss_vals[-15:])/15
+		avg_gauss_vals = sum(gauss_vals[-10:])/10
 		count = 0
 		if value > avg_gauss_vals:
-			# print(val[1])
 			count = count+1
 			val_tuple = (val[0], val[1])
 			filtered_data.append(val_tuple)
-		print(count)
 		last_vals.append(val)
-		# print(val[0])
-		# print(value)
 		index = index+1
-	# print(filtered_data)
-
-	# 2.4431398748369085e-18
-	# 2.443139873359419e-18
 
 def main():
-	# for val in values_test_1:
-	# 	print(val[1]-start_time)
-	# print('-----+++++++++--------')
 	gauss()
-	# print('-----+++++++++--------')
-	# for val in filtered_data:
-	# 	print(val[1]-start_time)
-	# print('-----+++++++++--------')
 	rssi_min = 50
 	rssi_max = 0
 	for value in values_test_1:
@@ -82,6 +66,7 @@ def main():
 	time_max = values_test_1[-1][1]
 	time_min = values_test_1[0][0]
 
+	# plt.style.use('grayscale')
 	plt.figure(figsize=(15, 6))
 	plt.title("Distance Approximation with Gaussian Filtering")
 	plt.xlim(0,10)
@@ -95,19 +80,17 @@ def main():
 		time_val = val[1]-start_time
 		past_time_val = values_test_1[old_index][1]-start_time
 		past_val = values_test_1[old_index][0]
-		plt.scatter(time_val, val[0], marker='.', color='b')
-		# plt.scatter(time_val, filtered_data[old_index+1][0])
-		connectpoints(time_val, val[0], past_time_val, past_val, 'k-')
+		if old_index == 0:
+			plt.scatter(time_val, val[0], marker='.', color='b', label="Unfiltered Data")
+			connectpoints(time_val, val[0], past_time_val, past_val, 'k', 'solid', "Unfiltered Model")
+		else:
+			plt.scatter(time_val, val[0], marker='.', color='b')
+			connectpoints(time_val, val[0], past_time_val, past_val, 'k', 'solid')
+		
 		old_index = old_index +1
 
-	# plt.legend()
 	# plt.show()
 
-	# plt.title("Distance Approximation without Gaussian Filtering")
-	# plt.xlim(0,10)
-
-	# plt.xlim(0,10)
-	# plt.ylim(rssi_min-0.5, rssi_max+0.5)
 	old_index = 0
 	print('----------------')
 	for val in filtered_data[1:]:
@@ -115,11 +98,16 @@ def main():
 		past_time_val = filtered_data[old_index][1]-start_time
 		past_val = filtered_data[old_index][0]
 		print(time_val)
-		plt.scatter(time_val, val[0], marker='o', color='r')
-		connectpoints(time_val, val[0], past_time_val, past_val, 'b-')
+		if old_index == 0:
+			plt.scatter(time_val, val[0], marker='o', color='r', label="Filtered Data")
+			connectpoints(time_val, val[0], past_time_val, past_val, 'b', 'dashed', "Filtered Model")
+		else:
+			plt.scatter(time_val, val[0], marker='o', color='r')
+			connectpoints(time_val, val[0], past_time_val, past_val, 'b', 'dashed')
 		old_index = old_index +1
 
-	# plt.legend()
+	plt.legend()
+	plt.gray()
 	plt.show()
 
 if __name__ == '__main__':
