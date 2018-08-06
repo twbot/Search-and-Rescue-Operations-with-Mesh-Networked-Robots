@@ -14,16 +14,16 @@ filtered_data = []
 list_vals = [values_test_1[1]]*10
 values_test_2 = list_vals+values_test_1
 
-def connectpoints(x,y,p1,p2):
+def connectpoints(x,y,p1,p2, color):
     x1, x2 = x, p1
     y1, y2 = y, p2
-    plt.plot([x1,x2],[y1,y2],'k-')
+    plt.plot([x1,x2],[y1,y2],color)
 
 def gauss():
 	# for val in values_test_2:
 	# 	print(val[1]-start_time)
 	last_vals = values_test_2[:10]
-
+	gauss_vals = []
 	def function(x, var, mu):
 		return (1/(var*math.sqrt(2*math.pi)))*math.pow(math.e, (-math.pow((x-mu), 2))/(2*math.pow(var, 2)))
 
@@ -34,14 +34,20 @@ def gauss():
 		value = value/(len(val_list)-1)
 		return value
 
+	index = 0
 	for val in values_test_2:
 		avg = sum(last_vals[-10:][0])/10
 		variance = variance_func(last_vals[-10:], avg)
 		# print(type(last_vals[-4:]))
 		# print(last_vals[-4:])
 		value = function(val[0], variance, avg)
+		if index == 0:
+			value_list = [value]*15
+			gauss_vals = gauss_vals + value_list
+		gauss_vals.append(value)
+		avg_gauss_vals = sum(gauss_vals[-15:])/15
 		count = 0
-		if value < 1.5269627206783045e-17:
+		if value > avg_gauss_vals:
 			# print(val[1])
 			count = count+1
 			val_tuple = (val[0], val[1])
@@ -50,6 +56,7 @@ def gauss():
 		last_vals.append(val)
 		# print(val[0])
 		# print(value)
+		index = index+1
 	# print(filtered_data)
 
 	# 2.4431398748369085e-18
@@ -76,7 +83,7 @@ def main():
 	time_min = values_test_1[0][0]
 
 	plt.figure(figsize=(15, 6))
-	plt.title("Distance Approximation without Gaussian Filtering")
+	plt.title("Distance Approximation with Gaussian Filtering")
 	plt.xlim(0,10)
 	plt.ylim(rssi_min-0.5, rssi_max+0.5)
 	plt.xlabel('Distance (m)')
@@ -90,11 +97,11 @@ def main():
 		past_val = values_test_1[old_index][0]
 		plt.scatter(time_val, val[0], marker='.', color='b')
 		# plt.scatter(time_val, filtered_data[old_index+1][0])
-		connectpoints(time_val, val[0], past_time_val, past_val)
+		connectpoints(time_val, val[0], past_time_val, past_val, 'k-')
 		old_index = old_index +1
 
-	plt.legend()
-	plt.show()
+	# plt.legend()
+	# plt.show()
 
 	# plt.title("Distance Approximation without Gaussian Filtering")
 	# plt.xlim(0,10)
@@ -108,8 +115,8 @@ def main():
 		past_time_val = filtered_data[old_index][1]-start_time
 		past_val = filtered_data[old_index][0]
 		print(time_val)
-		plt.scatter(time_val, val[0], marker='.', color='r')
-		connectpoints(time_val, val[0], past_time_val, past_val)
+		plt.scatter(time_val, val[0], marker='o', color='r')
+		connectpoints(time_val, val[0], past_time_val, past_val, 'b-')
 		old_index = old_index +1
 
 	# plt.legend()
