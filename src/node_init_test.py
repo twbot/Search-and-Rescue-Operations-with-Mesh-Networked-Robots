@@ -78,6 +78,7 @@ def instantiate_zigbee_network():
 
         xnet.add_device_discovered_callback(xlib.discoverCallback)
         xnet.add_discovery_process_finished_callback(xlib.discoverCompleteCallback)
+        global start_net
         start_net = time.time()
         xnet.start_discovery_process()
 
