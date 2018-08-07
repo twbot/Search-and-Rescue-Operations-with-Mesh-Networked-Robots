@@ -407,7 +407,7 @@ def coordinate_copter_velocities(roll, pitch, throttle, yaw):
 
 def determined_path_rover(start_time, throttle):
     sample_time = time.time()
-    yaw = 0
+    yaw = 1500
     if ((sample_time - start_time) > 5) and ((sample_time - start_time) < 5.5):
         yaw = 1300
     if ((sample_time - start_time) > 8) and ((sample_time - start_time) < 9):
