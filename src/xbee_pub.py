@@ -55,8 +55,11 @@ vehicle = None
 packets_sent = 0
 throttle = 0;
 
+#Publisher for rc data (turning angle, throttle)
 rc_pub = rospy.Publisher('/mavros/rc/override', OverrideRCIn, queue_size=10)
 
+#Function called at beginning to find nodes and instantiate the location of other
+#nodes in the system, relative to one another
 def instantiate_zigbee_network():
     try:
         print("Opening xbee port")
@@ -108,10 +111,13 @@ def instantiate_zigbee_network():
 
 def determine_architecture():
     if(node_id == 'COORDINATOR'):
+        #Grab a node from list of nodes in system, send data, and determine RSSI
+        #from received packet
         for node in nodes:
             count = 0
             sending_node = None
             rssi_det = []
+            #Average all RSSI values received from determined node
             while count < avg_count:
                 xbee.send_data(node,"DATREQ")
                 data = None
@@ -120,6 +126,8 @@ def determine_architecture():
                 while data == None:
                     packet = xbee.read_data()
                     data = packet
+                    #If no packet is received in 6 seconds,
+                    #exit program
                     time_pass = check_time(start_time, 6)
                     if(time_pass):
                         rospy.logerr('Could not retreive data from node: ')
@@ -129,21 +137,27 @@ def determine_architecture():
                 sending_node = data.remote_device
                 rssi_det.append(int(data.data.decode()))
             rssi = float(sum(rssi_det)/len(rssi_det))
+            #Add node and corresponding RSSI to RSSI table
             init_rssi_table(sending_node, rssi)
         self_node = {}
         self_node["node"] = str(address)
         self_node["rssi"] = 0
         rssi_table.append(self_node)
+        #Once all nodes have been determined, along with corresponding RSSI's
+        #sort data table by values with lowest absolute valued RSSI
         sort_table_by_rssi()
     else:
         count = 0
+        #Receive N data packets from Coordinator
         while count < avg_count:
             data = None
+            #Continue checking for packet received
             while data == None:
                 packet = xbee.read_data()
                 data = packet
             val = data.data.decode()
             sending_node = data.remote_device
+            #Send RSSI data back to remote device
             if val == 'DATREQ':
                 rssi = get_RSSI()
                 string = str(rssi).encode()
@@ -249,20 +263,25 @@ def determine_rssi_value():
 
 def determine_neighbors():
     index = 0
+    #Grab self index within RSSI table
     for node in rssi_table:
         if node["node"] == address:
             index = rssi_table.index(node)
+    #If first in table, set node_rely to None (Coordinator)
     global node_rely
     if index == 0:
         node_rely = None
+    #Else determine node_rely to be index below current index
     else:
         node_val = rssi_table[index-1]
         for node in nodes:
             if node_val["node"] == str(node.get_64bit_addr()):
                 node_rely = node
+    #If last in table, set node_rely to None
     global node_send
     if index == (len(rssi_table)-1):
         node_send = None
+    #Else determine node_rely to be index above current index
     else:
         node_val = rssi_table[index+1]
         for node in nodes:
@@ -271,6 +290,7 @@ def determine_neighbors():
     return 1
 
 def takeoff_copter():
+    #After arming copter, set for mode: takeoff
     rospy.wait_for_service('/mavros/cmd/arming')
     arming = rospy.ServiceProxy('/mavros/cmd/arming', CommandBool)
     response = arming(value=True)
@@ -287,6 +307,7 @@ def takeoff_copter():
         return 1
 
 def land_copter():
+    #Land copter on ros end or keyboard interrupt
     rospy.wait_for_service('/mavros/cmd/land')
     land = rospy.ServiceProxy('/mavros/cmd/land', CommandTOL)
     response = land(altitude=5, latitude=0, longitude=0, min_pitch=0, yaw=0)
@@ -442,18 +463,21 @@ def on_end():
         print('Xbee Closed')
     # if vehicle == 'Copter':
         # land_copter()
-    # if data_send:
-    #     data = rssi_hist + turning_hist
-    #     send_data_to_file(data)
     print(rssi_hist)
     # print(turning_hist)
     print(data_hist)
 
-def main(vehicle_type, velocity, data_send):
+def main(vehicle_type, velocity, threshold):
+    #Set global variables for:
+    # - vehicle throttle (based on coordinator's throttle)
+    # - vehicle type
+    # - RSSI thresholding
     global throttle
     throttle = velocity
     global vehicle
     vehicle = vehicle_type
+    global rssi_margin
+    rssi_margin = threshold
 
     rospy.init_node('Search_Run')
     r = rospy.Rate(30)
@@ -461,8 +485,9 @@ def main(vehicle_type, velocity, data_send):
 
     net_instantiated = instantiate_zigbee_network()
     arch_instantiated = determine_architecture()
-    'Net Instantiated' if net_instantiated else 'Net failed to instantiated'
-    'Architecture Instantiated' if arch_instantiated else 'Architecture failed to instantiate'
+    print('Net Instantiated') if net_instantiated else print('Net failed to instantiated')
+    print('Architecture Instantiated') if arch_instantiated else print('Architecture failed to instantiate')
+    
     init_complete = 0
     if arch_instantiated and net_instantiated:
         init_complete = send_rssi_table()
@@ -522,7 +547,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('vehicle_type', help='Type of Vehicle: Copter or Rover', choices=['Rover', 'Copter'],  default='Rover')
     parser.add_argument('init_velocity', help='Initial velocity of vehicles', nargs='?', default=1650)
-    parser.add_argument('data_send', help='Send data to csv file', nargs='?', default=False)
+    parser.add_argument('threshold', help='Threshold for RSSI')
     args = parser.parse_args()
 
     response = None
@@ -539,7 +564,7 @@ if __name__ == '__main__':
     
     if "True" in str(response):
         try:
-            main(args.vehicle_type, args.init_velocity, args.data_send)
+            main(args.vehicle_type, args.init_velocity, args.threshold)
         except rospy.ROSInterruptException:
             rospy.logerr("Problem changing operating mode")
             pass
