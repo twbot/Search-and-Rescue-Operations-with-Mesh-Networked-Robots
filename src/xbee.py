@@ -4,9 +4,12 @@ from digi.xbee.devices import XBeeDevice, ZigBeeDevice
 from digi.xbee.models.status import NetworkDiscoveryStatus
 from digi.xbee.packets.base import DictKeys, OperatingMode
 import digi.xbee.packets.base as packets
+import time
 
 def discoverCallback(remote):
+    current_time = time.time()
     print("Device discovered: %s" % remote)
+    return current_time
 
 def discoverCompleteCallback(status):
     if status == NetworkDiscoveryStatus.ERROR_READ_TIMEOUT:
