@@ -9,7 +9,7 @@ import time
 def discoverCallback(remote):
     current_time = time.time()
     print("Device discovered: %s" % remote)
-    return current_time
+    print("current_time: ", current_time)
 
 def discoverCompleteCallback(status):
     if status == NetworkDiscoveryStatus.ERROR_READ_TIMEOUT:

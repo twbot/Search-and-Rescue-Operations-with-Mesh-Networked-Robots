@@ -72,15 +72,13 @@ def instantiate_zigbee_network():
 
         print("Entering discovery mode...\n")
 
-        global start_net
-        start_net = time.time()
         xnet = xbee.get_network()
         xnet.set_discovery_timeout(15)
         xnet.clear()
 
-        sampled_time = xnet.add_device_discovered_callback(xlib.discoverCallback)
-        time_find.append(sampled_time)
+        xnet.add_device_discovered_callback(xlib.discoverCallback)
         xnet.add_discovery_process_finished_callback(xlib.discoverCompleteCallback)
+        start_net = time.time()
         xnet.start_discovery_process()
 
         while xnet.is_discovery_running():
@@ -294,8 +292,8 @@ def on_end():
     if xbee is not None and xbee.is_open():
         xbee.close()
         print('Xbee Closed')
-    print(rssi_hist)
-    print(data_hist)
+    # print(rssi_hist)
+    # print(data_hist)
 
 def main():
     net_instantiated = instantiate_zigbee_network()
