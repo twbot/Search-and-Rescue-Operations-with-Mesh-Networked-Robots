@@ -7,9 +7,7 @@ import digi.xbee.packets.base as packets
 import time
 
 def discoverCallback(remote):
-    current_time = time.time()
     print("Device discovered: %s" % remote)
-    print("current_time: ", current_time)
 
 def discoverCompleteCallback(status):
     if status == NetworkDiscoveryStatus.ERROR_READ_TIMEOUT:
